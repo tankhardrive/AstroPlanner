@@ -1,0 +1,142 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AstroPlanner.ViewModels"
+             xmlns:controls="using:AstroPlanner.Controls"
+             x:Class="AstroPlanner.Views.ObjectDetailView"
+             x:DataType="vm:ObjectDetailViewModel">
+
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Spacing="0">
+
+            <!-- Object name header -->
+            <Border Padding="12,10" Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}">
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Grid.Column="0" Spacing="2">
+                        <TextBlock Text="{Binding DetailName}"
+                                   FontSize="16" FontWeight="SemiBold"
+                                   TextWrapping="Wrap"/>
+                        <TextBlock Text="{Binding DetailCatalogs}"
+                                   FontSize="11" Opacity="0.6"/>
+                    </StackPanel>
+                    <Button Grid.Column="1"
+                            Content="AstroBin"
+                            Command="{Binding OpenAstroBinCommand}"
+                            VerticalAlignment="Center"
+                            Padding="8,4"
+                            FontSize="11"
+                            ToolTip.Tip="Search AstroBin for community images of this object"/>
+                </Grid>
+            </Border>
+
+            <!-- Survey Image with navigation -->
+            <Border Height="220" Background="#0a0a1a" ClipToBounds="True">
+                <Panel>
+                    <TextBlock Text="Loading image…"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                               Opacity="0.4" FontSize="12"
+                               IsVisible="{Binding ImageLoading}"/>
+                    <TextBlock Text="No image available"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                               Opacity="0.25" FontSize="12"
+                               IsVisible="{Binding ShowNoImage}"/>
+                    <Image Source="{Binding Image}"
+                           Stretch="UniformToFill"
+                           IsVisible="{Binding Image, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+
+                    <!-- Prev / Next arrows -->
+                    <Button Content="&#x276E;"
+                            Command="{Binding PrevImageCommand}"
+                            IsVisible="{Binding CanGoPrev}"
+                            HorizontalAlignment="Left" VerticalAlignment="Center"
+                            Margin="4,0" Padding="6,4"
+                            FontSize="16" Opacity="0.8"/>
+                    <Button Content="&#x276F;"
+                            Command="{Binding NextImageCommand}"
+                            IsVisible="{Binding CanGoNext}"
+                            HorizontalAlignment="Right" VerticalAlignment="Center"
+                            Margin="4,0" Padding="6,4"
+                            FontSize="16" Opacity="0.8"/>
+
+                    <!-- Source label + credit -->
+                    <StackPanel Orientation="Horizontal" Spacing="6"
+                                HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                                Margin="0,0,4,3">
+                        <TextBlock Text="{Binding CurrentSourceLabel}"
+                                   FontSize="9" FontWeight="SemiBold" Opacity="0.7"/>
+                        <TextBlock Text="{Binding CurrentSourceCredit}"
+                                   FontSize="9" Opacity="0.4"/>
+                    </StackPanel>
+                </Panel>
+            </Border>
+
+            <!-- Altitude plot -->
+            <Border Padding="4,8,4,4">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Altitude tonight" FontSize="11" Opacity="0.6" Margin="4,0"/>
+                    <controls:AltitudePlotControl
+                        Samples="{Binding PlotSamples}"
+                        TimeZone="{Binding ObservingTimeZone}"
+                        Height="130"/>
+                    <WrapPanel Margin="4,0" ItemSpacing="12">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <Border Width="16" Height="3" Background="#50b4ff" VerticalAlignment="Center"/>
+                            <TextBlock Text="Below horizon" FontSize="10" Opacity="0.6"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <Border Width="16" Height="3" Background="#50ff78" VerticalAlignment="Center"/>
+                            <TextBlock Text="Visible" FontSize="10" Opacity="0.6"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <Border Width="16" Height="3" Background="#c8641e" VerticalAlignment="Center"/>
+                            <TextBlock Text="Horizon" FontSize="10" Opacity="0.6"/>
+                        </StackPanel>
+                    </WrapPanel>
+                </StackPanel>
+            </Border>
+
+            <Separator Margin="8,0"/>
+
+            <!-- Visibility info -->
+            <Grid Margin="12,8" ColumnDefinitions="Auto,8,*" RowDefinitions="Auto,Auto,Auto,Auto">
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Visible" Opacity="0.6" FontSize="12"/>
+                <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding DetailVisibility}" FontSize="12" TextWrapping="Wrap"/>
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Peak" Opacity="0.6" FontSize="12" Margin="0,3,0,0"/>
+                <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding DetailPeak}" FontSize="12" Margin="0,3,0,0"/>
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Moon sep." Opacity="0.6" FontSize="12" Margin="0,3,0,0"/>
+                <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding DetailMoonSep}" FontSize="12" Margin="0,3,0,0"/>
+            </Grid>
+
+            <Separator Margin="8,0"/>
+
+            <!-- Catalog data -->
+            <Grid Margin="12,8,12,12" ColumnDefinitions="Auto,8,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Type"        Opacity="0.6" FontSize="12"/>
+                <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding DetailType}" FontSize="12"/>
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Constellation" Opacity="0.6" FontSize="12" Margin="0,3,0,0"/>
+                <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding DetailConst}" FontSize="12" Margin="0,3,0,0"/>
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Magnitude"  Opacity="0.6" FontSize="12" Margin="0,3,0,0"/>
+                <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding DetailMag}" FontSize="12" Margin="0,3,0,0"/>
+
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Size"       Opacity="0.6" FontSize="12" Margin="0,3,0,0"/>
+                <TextBlock Grid.Row="3" Grid.Column="2" Text="{Binding DetailSize}" FontSize="12" Margin="0,3,0,0"/>
+
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="Surf. Bright." Opacity="0.6" FontSize="12" Margin="0,3,0,0"/>
+                <TextBlock Grid.Row="4" Grid.Column="2" Text="{Binding DetailSurfBr}" FontSize="12" Margin="0,3,0,0"/>
+
+                <TextBlock Grid.Row="5" Grid.Column="0" Text="Hubble"     Opacity="0.6" FontSize="12" Margin="0,3,0,0"/>
+                <TextBlock Grid.Row="5" Grid.Column="2" Text="{Binding DetailHubble}" FontSize="12" Margin="0,3,0,0"/>
+
+                <TextBlock Grid.Row="6" Grid.Column="0" Text="RA (J2000)" Opacity="0.6" FontSize="12" Margin="0,3,0,0"/>
+                <TextBlock Grid.Row="6" Grid.Column="2" Text="{Binding DetailRa}" FontSize="12" FontFamily="monospace" Margin="0,3,0,0"/>
+
+                <TextBlock Grid.Row="7" Grid.Column="0" Text="Dec (J2000)" Opacity="0.6" FontSize="12" Margin="0,3,0,0"/>
+                <TextBlock Grid.Row="7" Grid.Column="2" Text="{Binding DetailDec}" FontSize="12" FontFamily="monospace" Margin="0,3,0,0"/>
+            </Grid>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

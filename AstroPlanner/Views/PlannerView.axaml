@@ -1,0 +1,210 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AstroPlanner.ViewModels"
+             x:Class="AstroPlanner.Views.PlannerView"
+             x:DataType="vm:PlannerViewModel">
+
+    <DockPanel>
+
+        <!-- ── Filter bar ── -->
+        <Border DockPanel.Dock="Top"
+                Padding="8,6"
+                BorderThickness="0,0,0,1"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}">
+            <WrapPanel Orientation="Horizontal" ItemSpacing="8">
+
+                <!-- Search box -->
+                <TextBox Width="160" PlaceholderText="Search name, M31, NGC…"
+                         Text="{Binding SearchText}"
+                         VerticalAlignment="Center"/>
+
+                <!-- Type toggles -->
+                <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                    <CheckBox Content="Galaxies"  IsChecked="{Binding ShowGalaxies}"/>
+                    <CheckBox Content="Clusters"  IsChecked="{Binding ShowClusters}"/>
+                    <CheckBox Content="Nebulae"   IsChecked="{Binding ShowNebulae}"/>
+                    <CheckBox Content="Planets"   IsChecked="{Binding ShowPlanets}"/>
+                    <CheckBox Content="Stars"     IsChecked="{Binding ShowStars}"/>
+                </StackPanel>
+
+                <!-- Catalog filter -->
+                <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                    <TextBlock Text="Cat:" VerticalAlignment="Center" Opacity="0.7"/>
+                    <CheckBox Content="M"        IsChecked="{Binding ShowMessier}"  ToolTip.Tip="Messier"/>
+                    <CheckBox Content="C"        IsChecked="{Binding ShowCaldwell}" ToolTip.Tip="Caldwell"/>
+                    <CheckBox Content="NGC"      IsChecked="{Binding ShowNgc}"/>
+                    <CheckBox Content="IC"       IsChecked="{Binding ShowIc}"/>
+                </StackPanel>
+
+                <!-- Constellation filter -->
+                <ComboBox ItemsSource="{Binding Constellations}"
+                          SelectedItem="{Binding SelectedConstellation}"
+                          Width="80"
+                          VerticalAlignment="Center"/>
+
+                <!-- Max magnitude -->
+                <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                    <TextBlock Text="Mag ≤" VerticalAlignment="Center"/>
+                    <NumericUpDown Value="{Binding MaxMagnitude}"
+                                   Minimum="1" Maximum="20" Increment="0.5"
+                                   FormatString="F1"
+                                   Width="115"/>
+                </StackPanel>
+
+                <!-- Min duration -->
+                <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                    <TextBlock Text="Min vis." VerticalAlignment="Center"/>
+                    <NumericUpDown Value="{Binding MinDurationHours}"
+                                   Minimum="0" Maximum="12" Increment="0.5"
+                                   FormatString="F1"
+                                   Width="115"/>
+                    <TextBlock Text="h" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Only visible toggle -->
+                <CheckBox Content="Visible only" IsChecked="{Binding OnlyVisible}" VerticalAlignment="Center"/>
+
+                <!-- Clear filters -->
+                <Button Content="✕ Clear"
+                        Command="{Binding ClearFiltersCommand}"
+                        IsVisible="{Binding HasActiveFilters}"
+                        VerticalAlignment="Center"/>
+            </WrapPanel>
+        </Border>
+
+        <!-- ── Status bar ── -->
+        <Border DockPanel.Dock="Bottom"
+                Padding="8,3"
+                BorderThickness="0,1,0,0"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}">
+            <TextBlock Text="{Binding StatusText}" FontSize="11" Opacity="0.7"/>
+        </Border>
+
+        <!-- ── DataGrid ── -->
+        <DataGrid ItemsSource="{Binding DisplayRows}"
+                  SelectedItem="{Binding SelectedRow}"
+                  AutoGenerateColumns="False"
+                  CanUserSortColumns="True"
+                  CanUserResizeColumns="True"
+                  IsReadOnly="True"
+                  GridLinesVisibility="Horizontal"
+                  Sorting="OnGridSorting"
+                  x:Name="ObjectGrid">
+
+            <DataGrid.Columns>
+
+                <DataGridTextColumn Binding="{Binding PrimaryName}"
+                                    Width="150" SortMemberPath="PrimaryName">
+                    <DataGridTextColumn.Header>
+                        <TextBlock Text="Name"
+                                   ToolTip.Tip="Primary name — common name if available, then Messier number, then catalog ID"/>
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn Binding="{Binding CatalogIds}"
+                                    Width="130" SortMemberPath="CatalogIds">
+                    <DataGridTextColumn.Header>
+                        <TextBlock Text="IDs"
+                                   ToolTip.Tip="All catalog identifiers for this object (Messier, NGC, IC, Caldwell, etc.)"/>
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn Binding="{Binding TypeDisplay}"
+                                    Width="150" SortMemberPath="TypeDisplay">
+                    <DataGridTextColumn.Header>
+                        <TextBlock Text="Type"
+                                   ToolTip.Tip="Object type — Galaxy, Open Cluster, Globular Cluster, Planetary Nebula, etc."/>
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn Binding="{Binding Constellation}"
+                                    Width="155" SortMemberPath="Constellation">
+                    <DataGridTextColumn.Header>
+                        <TextBlock Text="Constellation"
+                                   ToolTip.Tip="Constellation the object is located in"/>
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn Binding="{Binding MagnitudeDisplay}"
+                                    Width="75" SortMemberPath="SortMag">
+                    <DataGridTextColumn.Header>
+                        <TextBlock Text="Mag"
+                                   ToolTip.Tip="Apparent visual magnitude — lower numbers are brighter.&#x0a;&#x0a;Each step of 1 mag is ~2.5× in brightness:&#x0a;  Sun = −26 · Full Moon = −13 · Venus ≈ −4&#x0a;  Naked-eye limit (dark sky) ≈ 6.5&#x0a;  Binoculars ≈ 10 · Large amateur scope ≈ 14–15"/>
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn Binding="{Binding SizeDisplay}"
+                                    Width="95" SortMemberPath="SizeDisplay">
+                    <DataGridTextColumn.Header>
+                        <TextBlock Text="Size"
+                                   ToolTip.Tip="Angular size on the sky. ' = arcminutes, &quot; = arcseconds.&#x0a;60' = 1° ≈ twice the width of the full Moon."/>
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn Binding="{Binding DurationDisplay}"
+                                    Width="95" SortMemberPath="SortDuration">
+                    <DataGridTextColumn.Header>
+                        <TextBlock Text="Duration"
+                                   ToolTip.Tip="How long the object is visible above your horizon during astronomical darkness tonight"/>
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+
+                <!-- Vis. Start — template column so cells can carry a 12h tooltip -->
+                <DataGridTemplateColumn Width="95" SortMemberPath="VisStartDisplay" CanUserSort="True">
+                    <DataGridTemplateColumn.Header>
+                        <TextBlock Text="Vis. Start"
+                                   ToolTip.Tip="When the object rises above your horizon (24h local time). Hover a cell for 12h format."/>
+                    </DataGridTemplateColumn.Header>
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:ObjectRowViewModel">
+                            <TextBlock Text="{Binding VisStartDisplay}"
+                                       ToolTip.Tip="{ReflectionBinding VisStart12h}"
+                                       Margin="12,0" VerticalAlignment="Center"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- Vis. End — template column so cells can carry a 12h tooltip -->
+                <DataGridTemplateColumn Width="90" SortMemberPath="VisEndDisplay" CanUserSort="True">
+                    <DataGridTemplateColumn.Header>
+                        <TextBlock Text="Vis. End"
+                                   ToolTip.Tip="When the object sets below your horizon (24h local time). Hover a cell for 12h format."/>
+                    </DataGridTemplateColumn.Header>
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:ObjectRowViewModel">
+                            <TextBlock Text="{Binding VisEndDisplay}"
+                                       ToolTip.Tip="{ReflectionBinding VisEnd12h}"
+                                       Margin="12,0" VerticalAlignment="Center"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTextColumn Binding="{Binding PeakAltDisplay}"
+                                    Width="90" SortMemberPath="SortPeakAlt">
+                    <DataGridTextColumn.Header>
+                        <TextBlock Text="Peak Alt"
+                                   ToolTip.Tip="Highest altitude the object reaches during the night.&#x0a;Objects below ~20° suffer from atmospheric distortion and extinction."/>
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn Binding="{Binding PeakClearanceDisplay}"
+                                    Width="95" SortMemberPath="SortClearance">
+                    <DataGridTextColumn.Header>
+                        <TextBlock Text="Peak Clr"
+                                   ToolTip.Tip="Clearance above your custom horizon at peak altitude — headroom above local obstructions like trees or buildings.&#x0a;Same as Peak Alt when using a flat horizon."/>
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn Binding="{Binding MoonSepDisplay}"
+                                    Width="105" SortMemberPath="SortMoonSep">
+                    <DataGridTextColumn.Header>
+                        <TextBlock Text="Moon Sep"
+                                   ToolTip.Tip="Angular separation from the Moon at the object's peak altitude.&#x0a;Larger = less sky glow from the Moon. Below ~30° the Moon significantly washes out faint objects."/>
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+
+            </DataGrid.Columns>
+        </DataGrid>
+
+    </DockPanel>
+</UserControl>

@@ -1,0 +1,102 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:AstroPlanner.ViewModels"
+        xmlns:views="using:AstroPlanner.Views"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="1400" d:DesignHeight="850"
+        x:Class="AstroPlanner.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="AstroPlanner"
+        MinWidth="900" MinHeight="600"
+        Width="1400" Height="850">
+
+    <Design.DataContext>
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+
+    <DockPanel>
+
+        <!-- ── Top toolbar ── -->
+        <Border DockPanel.Dock="Top"
+                BorderThickness="0,0,0,1"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                Padding="12,6">
+            <Grid ColumnDefinitions="Auto,16,Auto,16,*,16,Auto,8,Auto,16,Auto">
+
+                <TextBlock Grid.Column="0"
+                           Text="AstroPlanner"
+                           FontSize="18" FontWeight="SemiBold"
+                           VerticalAlignment="Center"/>
+
+                <!-- Observing date -->
+                <CalendarDatePicker Grid.Column="2"
+                                    SelectedDate="{Binding ObservingDate}"
+                                    VerticalAlignment="Center"
+                                    Width="150"
+                                    ToolTip.Tip="Observing date"/>
+
+                <!-- Site + horizon + moon info -->
+                <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding SiteName}" VerticalAlignment="Center"/>
+                    <TextBlock Text="•" VerticalAlignment="Center" Opacity="0.4"/>
+                    <TextBlock Text="{Binding HorizonName}" VerticalAlignment="Center" Opacity="0.7"/>
+                    <TextBlock Text="•" VerticalAlignment="Center" Opacity="0.4"/>
+                    <TextBlock Text="{Binding MoonInfo}" VerticalAlignment="Center" Opacity="0.8"/>
+                </StackPanel>
+
+                <!-- Calculate button -->
+                <Button Grid.Column="6"
+                        Content="⟳  Calculate"
+                        Command="{Binding CalculateCommand}"
+                        IsEnabled="{Binding Planner.IsNotCalculating}"
+                        Classes="accent"
+                        VerticalAlignment="Center"/>
+
+                <!-- Progress bar (calculating) -->
+                <ProgressBar Grid.Column="8"
+                             Value="{Binding Planner.CalculationProgress}"
+                             Maximum="100"
+                             Width="120" Height="6"
+                             IsVisible="{Binding Planner.IsCalculating}"
+                             VerticalAlignment="Center"/>
+
+                <!-- Settings toggle -->
+                <Button Grid.Column="10"
+                        Content="⚙ Settings"
+                        Command="{Binding ToggleSettingsCommand}"
+                        VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+
+        <!-- ── Main content area ── -->
+        <Grid>
+
+            <!-- Planner + detail side-by-side (hidden while settings open) -->
+            <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding IsNotShowSettings}">
+
+                <!-- Object list (PlannerView DataContext set in code-behind) -->
+                <views:PlannerView Grid.Column="0" x:Name="PlannerViewControl"/>
+
+                <!-- Detail panel (shown when an object is selected) -->
+                <Border Grid.Column="1"
+                        Width="320"
+                        IsVisible="{Binding Detail.IsVisible}"
+                        BorderThickness="1,0,0,0"
+                        BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}">
+                    <!-- ObjectDetailView DataContext set in code-behind -->
+                    <views:ObjectDetailView x:Name="DetailViewControl"/>
+                </Border>
+
+            </Grid>
+
+            <!-- Settings panel — wrapper owns IsVisible so the DataContext swap on SettingsView
+                 doesn't break the binding (DataContext set in code-behind on inner view only) -->
+            <Border IsVisible="{Binding ShowSettings}">
+                <views:SettingsView x:Name="SettingsViewControl"/>
+            </Border>
+
+        </Grid>
+    </DockPanel>
+</Window>
