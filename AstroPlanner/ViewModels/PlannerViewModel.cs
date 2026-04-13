@@ -238,7 +238,7 @@ public partial class PlannerViewModel : ViewModelBase
         }
 
         // Constellation
-        if (SelectedConstellation != "All" && SelectedConstellation.Length > 0)
+        if (SelectedConstellation != null && SelectedConstellation != "All" && SelectedConstellation.Length > 0)
             filtered = filtered.Where(r =>
                 r.DsoSource != null &&
                 ConstellationNames.Expand(r.DsoSource.Constellation)
