@@ -9,6 +9,49 @@
         Background="Black"
         Icon="/Assets/avalonia-logo.ico">
 
-    <NativeWebView x:Name="WebView"/>
+    <Panel>
+
+        <NativeWebView x:Name="WebView"/>
+
+        <!-- Rotation control bar — overlaid at the bottom -->
+        <Border VerticalAlignment="Bottom"
+                Background="#cc0a0a16"
+                BorderThickness="0,1,0,0"
+                BorderBrush="#1e2030"
+                Padding="16,8">
+            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+
+                <TextBlock Text="Rotation"
+                           Foreground="#667"
+                           FontSize="12"
+                           VerticalAlignment="Center"/>
+
+                <Slider x:Name="RotationSlider"
+                        Minimum="-180" Maximum="180" Value="0"
+                        SmallChange="1" LargeChange="15"
+                        Width="300" VerticalAlignment="Center"/>
+
+                <NumericUpDown x:Name="RotationNumeric"
+                               Minimum="-180" Maximum="180" Value="0"
+                               Increment="1" FormatString="F1"
+                               Width="130" Height="28"
+                               VerticalAlignment="Center"
+                               FontSize="12"/>
+
+                <TextBlock Text="°"
+                           Foreground="#667"
+                           FontSize="12"
+                           VerticalAlignment="Center"/>
+
+                <Button x:Name="ResetRotationButton"
+                        Content="Reset"
+                        Padding="10,4"
+                        FontSize="12"
+                        VerticalAlignment="Center"/>
+
+            </StackPanel>
+        </Border>
+
+    </Panel>
 
 </Window>

@@ -3,6 +3,7 @@
   <component name="AvaloniaProject">
     <option name="projectPerEditor">
       <map>
+        <entry key="AstroPlanner/Views/FovPreviewWindow.axaml" value="AstroPlanner/AstroPlanner.csproj" />
         <entry key="AstroPlanner/Views/MainWindow.axaml" value="AstroPlanner/AstroPlanner.csproj" />
         <entry key="AstroPlanner/Views/PlannerView.axaml" value="AstroPlanner/AstroPlanner.csproj" />
       </map>

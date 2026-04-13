@@ -24,42 +24,22 @@ public static class AladinHtmlBuilder
         IReadOnlyList<ImagingSetup> setups,
         Guid? bestId)
     {
-        var overlayJs  = new StringBuilder();
+        var setupsJs   = new StringBuilder();
         var legendRows = new StringBuilder();
 
         for (int i = 0; i < setups.Count; i++)
         {
             var s = setups[i];
-            bool isBest   = s.Id == bestId;
-            string color  = Palette[i % Palette.Length];
-            double lw     = isBest ? 3.5 : 1.5;
+            bool isBest  = s.Id == bestId;
+            string color = Palette[i % Palette.Length];
+            double lw    = isBest ? 3.5 : 1.5;
 
-            // FOV corners in sky coordinates
             var (fovW, fovH) = FovCalculator.FovArcmin(s);
-            double halfWDeg  = fovW / 60.0 / 2.0;
-            double halfHDeg  = fovH / 60.0 / 2.0;
-            double decRad    = dec * Math.PI / 180.0;
-            double raOff     = Math.Abs(Math.Cos(decRad)) > 1e-6
-                               ? halfWDeg / Math.Cos(decRad) : halfWDeg;
 
-            // Clockwise from top-left
-            (double R, double D)[] corners =
-            [
-                (ra - raOff, dec + halfHDeg),
-                (ra + raOff, dec + halfHDeg),
-                (ra + raOff, dec - halfHDeg),
-                (ra - raOff, dec - halfHDeg),
-            ];
-
-            string pts = string.Join(",",
-                corners.Select(c => $"[{F(c.R)},{F(c.D)}]"));
-
-            overlayJs.AppendLine($$"""
-                    {
-                        const ov{{i}} = A.graphicOverlay({color:'{{color}}', lineWidth:{{F1(lw)}}});
-                        aladin.addOverlay(ov{{i}});
-                        ov{{i}}.add(A.polygon([{{pts}}]));
-                    }
+            // Bake setup data as a JS object — rotation math happens in JS
+            if (i > 0) setupsJs.Append(',');
+            setupsJs.Append($$"""
+                {fovW:{{F(fovW)}},fovH:{{F(fovH)}},color:'{{color}}',lineWidth:{{F1(lw)}}}
                 """);
 
             // Legend row
@@ -121,8 +101,46 @@ public static class AladinHtmlBuilder
                 {{legendRows}}
             </div>
             <script>
+            const CENTER_RA  = {{F(ra)}};
+            const CENTER_DEC = {{F(dec)}};
+            const SETUPS = [{{setupsJs}}];
+
+            let aladinInst = null;
+            let overlays   = [];
+
+            // Build rotated corner polygon for one setup in sky coords.
+            // Rotation is in the tangent plane: positive = counter-clockwise
+            // as viewed on the sky (north up, east left) — i.e. PA increases east of north.
+            function buildCorners(fovW, fovH, rotDeg) {
+                const halfW    = fovW / 60.0 / 2.0;   // degrees
+                const halfH    = fovH / 60.0 / 2.0;
+                const decRad   = CENTER_DEC * Math.PI / 180.0;
+                const cosDec   = Math.abs(Math.cos(decRad)) > 1e-6 ? Math.cos(decRad) : 1e-6;
+                const rotRad   = rotDeg * Math.PI / 180.0;
+                const cosR = Math.cos(rotRad), sinR = Math.sin(rotRad);
+                // Unrotated flat corners: x = RA*cos(dec) offset (east), y = Dec offset (north)
+                return [[-halfW,+halfH],[+halfW,+halfH],[+halfW,-halfH],[-halfW,-halfH]]
+                    .map(([x,y]) => [
+                        CENTER_RA  + (x*cosR - y*sinR) / cosDec,
+                        CENTER_DEC + (x*sinR + y*cosR)
+                    ]);
+            }
+
+            // Called from C# via InvokeScript to rotate all FOV boxes together.
+            function setRotation(deg) {
+                if (!aladinInst) return;
+                overlays.forEach(ov => aladinInst.removeLayer(ov));
+                overlays = [];
+                SETUPS.forEach(s => {
+                    const ov = A.graphicOverlay({color: s.color, lineWidth: s.lineWidth});
+                    aladinInst.addOverlay(ov);
+                    ov.add(A.polygon(buildCorners(s.fovW, s.fovH, deg)));
+                    overlays.push(ov);
+                });
+            }
+
             A.init.then(() => {
-                const aladin = A.aladin('#aladin-lite-div', {
+                aladinInst = A.aladin('#aladin-lite-div', {
                     survey:               'P/DSS2/color',
                     fov:                  {{F(fovDeg)}},
                     showReticle:          false,
@@ -134,10 +152,8 @@ public static class AladinHtmlBuilder
                     showCooGrid:          false,
                     backgroundColor:      '#000000',
                 });
-
-                aladin.gotoRaDec({{F(ra)}}, {{F(dec)}});
-
-            {{overlayJs}}
+                aladinInst.gotoRaDec(CENTER_RA, CENTER_DEC);
+                setRotation(0);
             });
             </script>
             </body>

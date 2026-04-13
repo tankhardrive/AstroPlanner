@@ -1,12 +1,17 @@
+using System.Globalization;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
+using Avalonia.Interactivity;
 using Avalonia.Platform;
-using Avalonia.Threading;
 using AstroPlanner.ViewModels;
 
 namespace AstroPlanner.Views;
 
 public partial class FovPreviewWindow : Window
 {
+    // Guard against slider↔numeric circular updates
+    private bool _syncingRotation;
+
     public FovPreviewWindow()
     {
         InitializeComponent();
@@ -28,16 +33,45 @@ public partial class FovPreviewWindow : Window
         WebView.NavigationCompleted += async (_, _) =>
         {
             // WebKitGTK offscreen surface is only blitted when the native widget is
-            // actually resized. Do an invisible 1-pixel window nudge to trigger it,
-            // then repeat a few times as Aladin's tiles stream in.
-            for (int i = 0; i < 1; i++)
-            {
-                await Task.Delay(i == 0 ? 200 : 500);
-                var s = ClientSize;
-                ClientSize = new Avalonia.Size(s.Width + 1, s.Height);
-                await Task.Delay(32);
-                ClientSize = s;
-            }
+            // actually resized. Do an invisible 1-pixel window nudge to trigger it.
+            await Task.Delay(200);
+            var s = ClientSize;
+            ClientSize = new Avalonia.Size(s.Width + 1, s.Height);
+            await Task.Delay(32);
+            ClientSize = s;
         };
+
+        RotationSlider.ValueChanged  += OnSliderChanged;
+        RotationNumeric.ValueChanged += OnNumericChanged;
+        ResetRotationButton.Click    += OnResetClicked;
+    }
+
+    private void OnSliderChanged(object? sender, RangeBaseValueChangedEventArgs e)
+    {
+        if (_syncingRotation) return;
+        _syncingRotation = true;
+        RotationNumeric.Value = (decimal)e.NewValue;
+        _syncingRotation = false;
+        ApplyRotation(e.NewValue);
+    }
+
+    private void OnNumericChanged(object? sender, NumericUpDownValueChangedEventArgs e)
+    {
+        if (_syncingRotation) return;
+        _syncingRotation = true;
+        RotationSlider.Value = (double)(e.NewValue ?? 0m);
+        _syncingRotation = false;
+        ApplyRotation((double)(e.NewValue ?? 0m));
+    }
+
+    private void OnResetClicked(object? sender, RoutedEventArgs e)
+    {
+        RotationSlider.Value = 0;
+    }
+
+    private void ApplyRotation(double deg)
+    {
+        var js = $"setRotation({deg.ToString("F2", CultureInfo.InvariantCulture)})";
+        WebView.InvokeScript(js);
     }
 }
