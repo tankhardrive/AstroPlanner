@@ -26,5 +26,6 @@
         <PackageReference Include="Avalonia.Controls.DataGrid" Version="12.0.0"/>
         <PackageReference Include="AASharp" Version="*"/>
         <PackageReference Include="CsvHelper" Version="*"/>
+        <PackageReference Include="Avalonia.Controls.WebView" Version="12.0.0"/>
     </ItemGroup>
 </Project>

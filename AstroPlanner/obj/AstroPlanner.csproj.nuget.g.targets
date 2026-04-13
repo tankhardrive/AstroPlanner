@@ -8,5 +8,6 @@
     <Import Project="$(NuGetPackageRoot)avaloniaui.diagnosticssupport/2.2.0/buildTransitive/AvaloniaUI.DiagnosticsSupport.targets" Condition="Exists('$(NuGetPackageRoot)avaloniaui.diagnosticssupport/2.2.0/buildTransitive/AvaloniaUI.DiagnosticsSupport.targets')" />
     <Import Project="$(NuGetPackageRoot)avalonia.buildservices/11.3.2/buildTransitive/Avalonia.BuildServices.targets" Condition="Exists('$(NuGetPackageRoot)avalonia.buildservices/11.3.2/buildTransitive/Avalonia.BuildServices.targets')" />
     <Import Project="$(NuGetPackageRoot)avalonia/12.0.0/buildTransitive/Avalonia.targets" Condition="Exists('$(NuGetPackageRoot)avalonia/12.0.0/buildTransitive/Avalonia.targets')" />
+    <Import Project="$(NuGetPackageRoot)avalonia.controls.webview/12.0.0/buildTransitive/Avalonia.Controls.WebView.targets" Condition="Exists('$(NuGetPackageRoot)avalonia.controls.webview/12.0.0/buildTransitive/Avalonia.Controls.WebView.targets')" />
   </ImportGroup>
 </Project>

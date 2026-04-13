@@ -31,6 +31,9 @@ build_property.EnableCodeStyleSeverity =
 [/home/nhartmann/RiderProjects/AstroPlanner/AstroPlanner/App.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
+[/home/nhartmann/RiderProjects/AstroPlanner/AstroPlanner/Views/FovPreviewWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
 [/home/nhartmann/RiderProjects/AstroPlanner/AstroPlanner/Views/MainWindow.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 

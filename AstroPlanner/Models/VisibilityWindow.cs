@@ -27,8 +27,14 @@ public class VisibilityWindow
     /// <summary>Total duration above the horizon within the darkness window.</summary>
     public TimeSpan Duration { get; init; }
 
+    /// <summary>Mean altitude across all visible steps tonight, in degrees.</summary>
+    public double AverageAltitudeDegrees { get; init; }
+
     /// <summary>Highest altitude reached tonight, in degrees.</summary>
     public double PeakAltitudeDegrees { get; init; }
+
+    /// <summary>Azimuth (north-zero, clockwise) at peak altitude.</summary>
+    public double PeakAzimuthDegrees { get; init; }
 
     /// <summary>Peak altitude minus horizon altitude at that azimuth (clearance above horizon).</summary>
     public double PeakClearanceDegrees { get; init; }

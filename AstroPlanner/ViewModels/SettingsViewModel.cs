@@ -46,6 +46,12 @@ public partial class SettingsViewModel : ViewModelBase
     // ── Computation ──────────────────────────────────────────────────────────
     [ObservableProperty] private decimal _stepMinutes = 15;
 
+    // ── Imaging setups ───────────────────────────────────────────────────────
+    [ObservableProperty] private List<ImagingSetupViewModel> _setupRows = [];
+    [ObservableProperty] private ImagingSetupViewModel? _selectedSetup;
+    [ObservableProperty] private string _setupError = "";
+    public bool HasSelectedSetup => SelectedSetup != null;
+
     public event Action? SettingsSaved;
 
     public SettingsViewModel(SettingsService settingsService)
@@ -54,6 +60,7 @@ public partial class SettingsViewModel : ViewModelBase
         _settings = settingsService.Load();
         StepMinutes = (decimal)_settings.VisibilityStepMinutes;
         RebuildRows();
+        RebuildSetupRows();
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
@@ -63,6 +70,11 @@ public partial class SettingsViewModel : ViewModelBase
         LocationRows = _settings.Locations
             .Select(l => new LocationRowViewModel(l, l.Name == _settings.ActiveLocationName))
             .ToList();
+    }
+
+    private void RebuildSetupRows()
+    {
+        SetupRows = _settings.ImagingSetups.Select(s => new ImagingSetupViewModel(s)).ToList();
     }
 
     private void PopulateEditor(ObservationLocation loc)
@@ -83,6 +95,12 @@ public partial class SettingsViewModel : ViewModelBase
     {
         OnPropertyChanged(nameof(HasSelectedLocation));
         if (value != null) PopulateEditor(value);
+    }
+
+    partial void OnSelectedSetupChanged(ImagingSetupViewModel? value)
+    {
+        OnPropertyChanged(nameof(HasSelectedSetup));
+        SetupError = "";
     }
 
     // ── Commands ─────────────────────────────────────────────────────────────
@@ -210,6 +228,50 @@ public partial class SettingsViewModel : ViewModelBase
         RebuildRows();
         HorizonSummary = "Flat (0°)";
         HorizonError   = "";
+        SettingsSaved?.Invoke();
+    }
+
+    // ── Imaging setup commands ────────────────────────────────────────────────
+
+    [RelayCommand]
+    private void AddSetup()
+    {
+        var setup = new ImagingSetup { Name = "New Setup" };
+        _settings.ImagingSetups.Add(setup);
+        _settingsService.Save(_settings);
+        RebuildSetupRows();
+        SelectedSetup = SetupRows[^1];
+        SettingsSaved?.Invoke();
+    }
+
+    [RelayCommand]
+    private void SelectSetup(ImagingSetupViewModel vm)
+    {
+        SelectedSetup = vm;
+    }
+
+    [RelayCommand]
+    private void DeleteSetup(ImagingSetup setup)
+    {
+        _settings.ImagingSetups.Remove(setup);
+        _settingsService.Save(_settings);
+        RebuildSetupRows();
+        if (SelectedSetup?.Source == setup) SelectedSetup = null;
+        SettingsSaved?.Invoke();
+    }
+
+    [RelayCommand]
+    private void SaveSetup()
+    {
+        if (SelectedSetup == null) return;
+        var error = SelectedSetup.TrySave();
+        if (error != null) { SetupError = error; return; }
+        _settingsService.Save(_settings);
+        RebuildSetupRows();
+        // Re-select the same underlying setup
+        SelectedSetup = SetupRows.FirstOrDefault(r => r.Source.Id == SelectedSetup.Source.Id)
+                        ?? SelectedSetup;
+        SetupError = "Saved.";
         SettingsSaved?.Invoke();
     }
 

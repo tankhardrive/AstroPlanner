@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "1mTkH/aoUkc=",
+  "dgSpecHash": "UKEwol8ZfJQ=",
   "success": true,
   "projectFilePath": "/home/nhartmann/RiderProjects/AstroPlanner/AstroPlanner/AstroPlanner.csproj",
   "expectedPackageFiles": [
@@ -9,6 +9,7 @@
     "/home/nhartmann/.nuget/packages/avalonia.angle.windows.natives/2.1.25547.20250602/avalonia.angle.windows.natives.2.1.25547.20250602.nupkg.sha512",
     "/home/nhartmann/.nuget/packages/avalonia.buildservices/11.3.2/avalonia.buildservices.11.3.2.nupkg.sha512",
     "/home/nhartmann/.nuget/packages/avalonia.controls.datagrid/12.0.0/avalonia.controls.datagrid.12.0.0.nupkg.sha512",
+    "/home/nhartmann/.nuget/packages/avalonia.controls.webview/12.0.0/avalonia.controls.webview.12.0.0.nupkg.sha512",
     "/home/nhartmann/.nuget/packages/avalonia.desktop/12.0.0/avalonia.desktop.12.0.0.nupkg.sha512",
     "/home/nhartmann/.nuget/packages/avalonia.fonts.inter/12.0.0/avalonia.fonts.inter.12.0.0.nupkg.sha512",
     "/home/nhartmann/.nuget/packages/avalonia.freedesktop/12.0.0/avalonia.freedesktop.12.0.0.nupkg.sha512",

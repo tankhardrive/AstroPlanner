@@ -1,0 +1,14 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:AstroPlanner.ViewModels"
+        x:Class="AstroPlanner.Views.FovPreviewWindow"
+        x:DataType="vm:FovPreviewViewModel"
+        Title="{Binding Title}"
+        Width="960" Height="720"
+        MinWidth="640" MinHeight="480"
+        Background="Black"
+        Icon="/Assets/avalonia-logo.ico">
+
+    <NativeWebView x:Name="WebView"/>
+
+</Window>

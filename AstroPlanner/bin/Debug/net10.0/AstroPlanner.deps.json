@@ -11,6 +11,7 @@
           "AASharp": "2.12.1",
           "Avalonia": "12.0.0",
           "Avalonia.Controls.DataGrid": "12.0.0",
+          "Avalonia.Controls.WebView": "12.0.0",
           "Avalonia.Desktop": "12.0.0",
           "Avalonia.Fonts.Inter": "12.0.0",
           "Avalonia.Themes.Fluent": "12.0.0",
@@ -107,6 +108,17 @@
         },
         "runtime": {
           "lib/net10.0/Avalonia.Controls.DataGrid.dll": {
+            "assemblyVersion": "12.0.0.0",
+            "fileVersion": "12.0.0.0"
+          }
+        }
+      },
+      "Avalonia.Controls.WebView/12.0.0": {
+        "dependencies": {
+          "Avalonia": "12.0.0"
+        },
+        "runtime": {
+          "lib/net10.0/Avalonia.Controls.WebView.dll": {
             "assemblyVersion": "12.0.0.0",
             "fileVersion": "12.0.0.0"
           }
@@ -591,6 +603,13 @@
       "sha512": "sha512-pQ9NiviIoxbZ7fiD/KTdoEHRgdKibKtx8Low3nTrU6ZbvULtesuB65aLL/umjibsGMhzPOveqs/om98QAA5FMg==",
       "path": "avalonia.controls.datagrid/12.0.0",
       "hashPath": "avalonia.controls.datagrid.12.0.0.nupkg.sha512"
+    },
+    "Avalonia.Controls.WebView/12.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-8GHNanQyuhwZhab5qKdQHYBcNKAVYRlkD47jNsswL7E3WpgTmLo9LolYyt5e4GdKkKZ2B5qIAXGs8GUJlmsuoA==",
+      "path": "avalonia.controls.webview/12.0.0",
+      "hashPath": "avalonia.controls.webview.12.0.0.nupkg.sha512"
     },
     "Avalonia.Desktop/12.0.0": {
       "type": "package",

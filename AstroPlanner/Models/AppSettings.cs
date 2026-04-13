@@ -8,6 +8,8 @@ public class AppSettings
     /// <summary>How often to sample the night when computing visibility (minutes).</summary>
     public int VisibilityStepMinutes { get; set; } = 15;
 
+    public List<ImagingSetup> ImagingSetups { get; set; } = [];
+
     // ── Legacy fields — kept only for one-time migration from old settings files ──────────────
     public ObservationSite? Site { get; set; }
     public List<HorizonProfile>? HorizonProfiles { get; set; }

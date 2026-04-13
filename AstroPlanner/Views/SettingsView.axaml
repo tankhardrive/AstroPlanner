@@ -184,6 +184,123 @@
                 </StackPanel>
             </Border>
 
+            <!-- ── Imaging Setups list ── -->
+            <Border BorderThickness="1"
+                    BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                    CornerRadius="4"
+                    Padding="16">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Imaging Setups" FontSize="15" FontWeight="SemiBold"/>
+
+                    <ItemsControl ItemsSource="{Binding SetupRows}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ImagingSetupViewModel">
+                                <Border Margin="0,2" Padding="8,6" CornerRadius="3"
+                                        Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}">
+                                    <Grid ColumnDefinitions="*,Auto,Auto">
+                                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Spacing="1">
+                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="13"/>
+                                            <TextBlock Text="{Binding FovDisplay}" FontSize="10" Opacity="0.55"/>
+                                        </StackPanel>
+                                        <Button Grid.Column="1"
+                                                Content="Edit"
+                                                Command="{Binding $parent[UserControl].((vm:SettingsViewModel)DataContext).SelectSetupCommand}"
+                                                CommandParameter="{Binding $self.DataContext}"
+                                                Margin="4,0,0,0" Padding="8,3" FontSize="12"/>
+                                        <Button Grid.Column="2"
+                                                Content="✕"
+                                                Command="{Binding $parent[UserControl].((vm:SettingsViewModel)DataContext).DeleteSetupCommand}"
+                                                CommandParameter="{Binding Source}"
+                                                Margin="4,0,0,0" Padding="6,3" FontSize="12"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <Button Content="+ Add Setup"
+                            Command="{Binding AddSetupCommand}"
+                            HorizontalAlignment="Left"
+                            Padding="10,4"/>
+                </StackPanel>
+            </Border>
+
+            <!-- ── Setup editor ── -->
+            <Border BorderThickness="1"
+                    BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                    CornerRadius="4"
+                    Padding="16"
+                    IsVisible="{Binding HasSelectedSetup}">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Edit Setup" FontSize="15" FontWeight="SemiBold"/>
+
+                    <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8">
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Setup Name" VerticalAlignment="Center"/>
+                        <TextBox   Grid.Row="0" Grid.Column="1" Text="{Binding SelectedSetup.Name}"
+                                   PlaceholderText="e.g. RC8 + ASI2600"/>
+
+                        <Separator Grid.Row="1" Grid.ColumnSpan="2" Margin="0,4"/>
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Telescope" VerticalAlignment="Center" Opacity="0.7" FontSize="12"/>
+                        <TextBox   Grid.Row="2" Grid.Column="1" Text="{Binding SelectedSetup.TelescopeName}"
+                                   PlaceholderText="e.g. Celestron RC8" FontSize="12"/>
+
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Aperture (mm)" VerticalAlignment="Center" FontSize="12"/>
+                        <TextBox   Grid.Row="3" Grid.Column="1" Text="{Binding SelectedSetup.ApertureMm}"
+                                   PlaceholderText="e.g. 203" FontSize="12"/>
+
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Focal Length (mm)" VerticalAlignment="Center" FontSize="12"/>
+                        <TextBox   Grid.Row="4" Grid.Column="1" Text="{Binding SelectedSetup.FocalLengthMm}"
+                                   PlaceholderText="e.g. 1624" FontSize="12"/>
+
+                        <TextBlock Grid.Row="5" Grid.Column="0" Text="f/ratio" VerticalAlignment="Center"
+                                   FontSize="12" Opacity="0.6"/>
+                        <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding SelectedSetup.FRatioDisplay}"
+                                   FontSize="12" Opacity="0.6" VerticalAlignment="Center"/>
+
+                        <Separator Grid.Row="6" Grid.ColumnSpan="2" Margin="0,4"/>
+
+                        <TextBlock Grid.Row="7" Grid.Column="0" Text="Camera" VerticalAlignment="Center" Opacity="0.7" FontSize="12"/>
+                        <TextBox   Grid.Row="7" Grid.Column="1" Text="{Binding SelectedSetup.CameraName}"
+                                   PlaceholderText="e.g. ZWO ASI2600MC-Pro" FontSize="12"/>
+
+                        <TextBlock Grid.Row="8" Grid.Column="0" Text="Pixel Size (µm)" VerticalAlignment="Center" FontSize="12"/>
+                        <TextBox   Grid.Row="8" Grid.Column="1" Text="{Binding SelectedSetup.PixelSizeMicrons}"
+                                   PlaceholderText="e.g. 3.76" FontSize="12"/>
+
+                        <TextBlock Grid.Row="9" Grid.Column="0" Text="Sensor (px W×H)" VerticalAlignment="Center" FontSize="12"/>
+                        <StackPanel Grid.Row="9" Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                            <TextBox Text="{Binding SelectedSetup.SensorWidthPixels}"
+                                     PlaceholderText="6248" Width="80" FontSize="12"/>
+                            <TextBlock Text="×" VerticalAlignment="Center" Opacity="0.6"/>
+                            <TextBox Text="{Binding SelectedSetup.SensorHeightPixels}"
+                                     PlaceholderText="4176" Width="80" FontSize="12"/>
+                        </StackPanel>
+
+                        <TextBlock Grid.Row="10" Grid.Column="0" Text="Plate scale / FOV" VerticalAlignment="Center"
+                                   FontSize="12" Opacity="0.6"/>
+                        <StackPanel Grid.Row="10" Grid.Column="1" Orientation="Horizontal" Spacing="12"
+                                    VerticalAlignment="Center">
+                            <TextBlock Text="{Binding SelectedSetup.PlateScaleDisplay}"
+                                       FontSize="12" Opacity="0.6"/>
+                            <TextBlock Text="{Binding SelectedSetup.FovDisplay}"
+                                       FontSize="12" Opacity="0.6"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <TextBlock Text="{Binding SetupError}"
+                               FontSize="12"
+                               Foreground="{DynamicResource SystemAccentColorLight2}"
+                               IsVisible="{Binding SetupError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                               TextWrapping="Wrap"/>
+
+                    <Button Content="Save Setup"
+                            Command="{Binding SaveSetupCommand}"
+                            HorizontalAlignment="Left"/>
+                </StackPanel>
+            </Border>
+
         </StackPanel>
     </ScrollViewer>
 </UserControl>

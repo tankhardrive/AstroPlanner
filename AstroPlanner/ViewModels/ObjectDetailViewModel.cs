@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using AstroPlanner.Models;
 using AstroPlanner.Services;
+using System.Collections.ObjectModel;
 
 namespace AstroPlanner.ViewModels;
 
@@ -15,7 +16,7 @@ public partial class ObjectDetailViewModel : ViewModelBase
     [ObservableProperty] private ObjectRowViewModel? _source;
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(ShowNoImage))] private Bitmap? _image;
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(ShowNoImage))] private bool _imageLoading;
-    [ObservableProperty] private IReadOnlyList<(DateTime Time, double Alt, double HorizAlt)>? _plotSamples;
+    [ObservableProperty] private IReadOnlyList<(DateTime Time, double Alt, double HorizAlt, double Az)>? _plotSamples;
 
     public bool ShowNoImage => Image == null && !ImageLoading;
 
@@ -39,6 +40,50 @@ public partial class ObjectDetailViewModel : ViewModelBase
     public ObservationSite? Site { get; set; }
     public HorizonProfile? Horizon { get; set; }
     public DateOnly ObservingDate { get; set; }
+
+    private IReadOnlyList<ImagingSetup> _setups = [];
+    public IReadOnlyList<ImagingSetup> Setups
+    {
+        get => _setups;
+        set { _setups = value; OnPropertyChanged(nameof(SetupResults)); }
+    }
+
+    public IReadOnlyList<SetupFovResult> SetupResults
+    {
+        get
+        {
+            if (_setups.Count == 0) return [];
+
+            double? maj = Source?.DsoSource?.MajorAxisArcmin
+                       ?? Source?.SolarSystemSource?.AngularDiameterArcmin;
+
+            ImagingSetup? best = maj.HasValue ? FovCalculator.BestSetup(_setups, maj.Value) : null;
+
+            return _setups
+                .Where(FovCalculator.IsUsable)
+                .Select(s =>
+                {
+                    var (w, h) = FovCalculator.FovArcmin(s);
+                    double ps = FovCalculator.PlateScaleArcsecPx(s.FocalLengthMm, s.PixelSizeMicrons);
+                    double? fill = maj.HasValue ? FovCalculator.FillPercent(s, maj.Value) : null;
+                    bool fits = !maj.HasValue || maj.Value <= Math.Max(w, h);
+                    return new SetupFovResult
+                    {
+                        SetupName           = s.Name,
+                        TelescopeName       = s.TelescopeName,
+                        CameraName          = s.CameraName,
+                        FovWidthArcmin      = w,
+                        FovHeightArcmin     = h,
+                        PlateScaleArcsecPx  = ps,
+                        FillPercent         = fill,
+                        ObjectFits          = fits,
+                        IsBestMatch         = s.Id == best?.Id,
+                    };
+                })
+                .OrderBy(r => !r.IsBestMatch)
+                .ToList();
+        }
+    }
 
     public ObjectDetailViewModel(ImageService imageService, VisibilityService visService)
     {
@@ -99,6 +144,33 @@ public partial class ObjectDetailViewModel : ViewModelBase
         catch { /* best-effort */ }
     }
 
+    // ── Aladin Lite ───────────────────────────────────────────────────────────
+
+    [RelayCommand]
+    private void OpenAladin()
+    {
+        double ra, dec, fov;
+        if (Source?.DsoSource is DeepSkyObject dso)
+        {
+            ra  = dso.RaDegrees;
+            dec = dso.DecDegrees;
+            double maj = dso.MajorAxisArcmin ?? 30;
+            fov = Math.Clamp(maj / 60.0 * 3.0, 0.1, 5.0);
+        }
+        else if (Source?.SolarSystemSource is SolarSystemObject ss)
+        {
+            ra  = ss.RaDegrees;
+            dec = ss.DecDegrees;
+            fov = 0.5;
+        }
+        else return;
+
+        var decStr = dec >= 0 ? $"+{dec:F5}" : $"{dec:F5}";
+        var url = $"https://aladin.cds.unistra.fr/AladinLite/?target={ra:F5}+{decStr}&fov={fov:F2}&survey=P/DSS2/color";
+        try { Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true }); }
+        catch { /* best-effort */ }
+    }
+
     // ── Image navigation ──────────────────────────────────────────────────────
 
     [RelayCommand]
@@ -152,6 +224,7 @@ public partial class ObjectDetailViewModel : ViewModelBase
         OnPropertyChanged(nameof(DetailPeak));
         OnPropertyChanged(nameof(DetailMoonSep));
         OnPropertyChanged(nameof(ObservingTimeZone));
+        OnPropertyChanged(nameof(SetupResults));
 
         _imageCts?.Cancel();
         _imagesBySource.Clear();
@@ -258,7 +331,7 @@ public partial class ObjectDetailViewModel : ViewModelBase
 
         return Task.Run(() =>
         {
-            List<(DateTime, double, double)>? samples;
+            List<(DateTime Time, double Alt, double HorizAlt, double Az)>? samples;
 
             if (row.DsoSource is DeepSkyObject dso)
             {

@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:AstroPlanner.ViewModels"
              xmlns:controls="using:AstroPlanner.Controls"
+             xmlns:sys="using:System"
              x:Class="AstroPlanner.Views.ObjectDetailView"
              x:DataType="vm:ObjectDetailViewModel">
 
@@ -18,13 +19,18 @@
                         <TextBlock Text="{Binding DetailCatalogs}"
                                    FontSize="11" Opacity="0.6"/>
                     </StackPanel>
-                    <Button Grid.Column="1"
-                            Content="AstroBin"
-                            Command="{Binding OpenAstroBinCommand}"
-                            VerticalAlignment="Center"
-                            Padding="8,4"
-                            FontSize="11"
-                            ToolTip.Tip="Search AstroBin for community images of this object"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                        <Button Content="Aladin"
+                                Command="{Binding OpenAladinCommand}"
+                                Padding="8,4"
+                                FontSize="11"
+                                ToolTip.Tip="Open in Aladin Lite sky atlas"/>
+                        <Button Content="AstroBin"
+                                Command="{Binding OpenAstroBinCommand}"
+                                Padding="8,4"
+                                FontSize="11"
+                                ToolTip.Tip="Search AstroBin for community images of this object"/>
+                    </StackPanel>
                 </Grid>
             </Border>
 
@@ -136,6 +142,68 @@
                 <TextBlock Grid.Row="7" Grid.Column="0" Text="Dec (J2000)" Opacity="0.6" FontSize="12" Margin="0,3,0,0"/>
                 <TextBlock Grid.Row="7" Grid.Column="2" Text="{Binding DetailDec}" FontSize="12" FontFamily="monospace" Margin="0,3,0,0"/>
             </Grid>
+
+            <Separator Margin="8,0"/>
+
+            <!-- Imaging setups breakdown -->
+            <StackPanel Margin="12,8,12,12" Spacing="6">
+                <TextBlock Text="Imaging Setups" FontSize="11" Opacity="0.6"/>
+
+                <!-- No setups configured -->
+                <TextBlock Text="No setups configured — add them in Settings."
+                           FontSize="11" Opacity="0.4" FontStyle="Italic"
+                           IsVisible="{Binding SetupResults.Count, Converter={x:Static ObjectConverters.IsNull}}"/>
+
+                <ItemsControl ItemsSource="{Binding SetupResults}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:SetupFovResult">
+                            <Border Margin="0,2" Padding="8,6" CornerRadius="3"
+                                    Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}">
+                                <StackPanel Spacing="3">
+
+                                    <!-- Name row with best-match star -->
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBlock Text="★"
+                                                   FontSize="10"
+                                                   Foreground="{DynamicResource SystemAccentColorLight2}"
+                                                   IsVisible="{Binding IsBestMatch}"
+                                                   VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding SetupName}"
+                                                   FontWeight="SemiBold" FontSize="12"/>
+                                    </StackPanel>
+
+                                    <!-- Telescope · Camera -->
+                                    <TextBlock Text="{Binding GearLabel}"
+                                               FontSize="10" Opacity="0.55"
+                                               IsVisible="{Binding GearLabel, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+                                    <!-- FOV · Plate scale · Fill · Fit -->
+                                    <StackPanel Orientation="Horizontal" Spacing="14" Margin="0,2,0,0">
+                                        <StackPanel Spacing="1">
+                                            <TextBlock Text="FOV" FontSize="9" Opacity="0.5"/>
+                                            <TextBlock Text="{Binding FovDisplay}" FontSize="11" FontFamily="monospace"/>
+                                        </StackPanel>
+                                        <StackPanel Spacing="1">
+                                            <TextBlock Text="Plate scale" FontSize="9" Opacity="0.5"/>
+                                            <TextBlock Text="{Binding PlateScaleDisplay}" FontSize="11" FontFamily="monospace"/>
+                                        </StackPanel>
+                                        <StackPanel Spacing="1">
+                                            <TextBlock Text="Fill" FontSize="9" Opacity="0.5"/>
+                                            <TextBlock Text="{Binding FillDisplay}" FontSize="11" FontFamily="monospace"/>
+                                        </StackPanel>
+                                        <StackPanel Spacing="1"
+                                                    IsVisible="{Binding FillPercent, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                            <TextBlock Text=" " FontSize="9"/>
+                                            <TextBlock Text="{Binding FitDisplay}" FontSize="11" Opacity="0.6"/>
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
 
         </StackPanel>
     </ScrollViewer>

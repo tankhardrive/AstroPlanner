@@ -14,6 +14,17 @@ public partial class PlannerViewModel : ViewModelBase
     // All rows built from catalog + solar system objects
     private List<ObjectRowViewModel> _allRows = [];
 
+    private IReadOnlyList<ImagingSetup> _setups = [];
+    public IReadOnlyList<ImagingSetup> Setups
+    {
+        get => _setups;
+        set
+        {
+            _setups = value;
+            foreach (var row in _allRows) row.Setups = value;
+        }
+    }
+
     [ObservableProperty] private ObservableCollection<ObjectRowViewModel> _displayRows = [];
     [ObservableProperty] private ObjectRowViewModel? _selectedRow;
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsNotCalculating))]
@@ -82,8 +93,8 @@ public partial class PlannerViewModel : ViewModelBase
         var dsObjects = _catalog.GetAll();
         var planets = SolarSystemObject.CreateDefaults();
 
-        _allRows = dsObjects.Select(d => new ObjectRowViewModel(d))
-            .Concat(planets.Select(p => new ObjectRowViewModel(p)))
+        _allRows = dsObjects.Select(d => new ObjectRowViewModel(d) { Setups = _setups })
+            .Concat(planets.Select(p => new ObjectRowViewModel(p) { Setups = _setups }))
             .ToList();
 
         var consts = new List<string> { "All" };
@@ -255,6 +266,8 @@ public partial class PlannerViewModel : ViewModelBase
                 "PeakAlt"   => filtered.OrderBy(r => r.SortPeakAlt),
                 "PeakClr"   => filtered.OrderBy(r => r.SortClearance),
                 "MoonSep"   => filtered.OrderBy(r => r.SortMoonSep),
+                "Score"     => filtered.OrderBy(r => r.SortScore),
+                "BestSetup" => filtered.OrderBy(r => r.SortBestFill),
                 "VisStart"  => filtered.OrderBy(r => r.Visibility.RiseTime ?? DateTime.MaxValue),
                 _           => filtered.OrderBy(r => r.SortDuration),
             };
@@ -271,6 +284,8 @@ public partial class PlannerViewModel : ViewModelBase
                 "PeakAlt"   => filtered.OrderByDescending(r => r.SortPeakAlt),
                 "PeakClr"   => filtered.OrderByDescending(r => r.SortClearance),
                 "MoonSep"   => filtered.OrderByDescending(r => r.SortMoonSep),
+                "Score"     => filtered.OrderByDescending(r => r.SortScore),
+                "BestSetup" => filtered.OrderByDescending(r => r.SortBestFill),
                 "VisStart"  => filtered.OrderByDescending(r => r.Visibility.RiseTime ?? DateTime.MinValue),
                 _           => filtered.OrderByDescending(r => r.SortDuration),
             };

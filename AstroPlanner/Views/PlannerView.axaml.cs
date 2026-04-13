@@ -1,4 +1,6 @@
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using AstroPlanner.ViewModels;
 
 namespace AstroPlanner.Views;
@@ -8,6 +10,14 @@ public partial class PlannerView : UserControl
     public PlannerView()
     {
         InitializeComponent();
+    }
+
+    private void OnGridDoubleTapped(object? sender, TappedEventArgs e)
+    {
+        if (DataContext is not PlannerViewModel vm || vm.SelectedRow == null) return;
+        var mainWindow = TopLevel.GetTopLevel(this) as Window;
+        if (mainWindow?.DataContext is not MainWindowViewModel mainVm) return;
+        mainVm.OpenFovPreview(vm.SelectedRow);
     }
 
     private void OnGridSorting(object? sender, DataGridColumnEventArgs e)
@@ -30,6 +40,8 @@ public partial class PlannerView : UserControl
             "SortPeakAlt"    => "PeakAlt",
             "SortClearance"  => "PeakClr",
             "SortMoonSep"    => "MoonSep",
+            "SortScore"      => "Score",
+            "SortBestFill"   => "BestSetup",
             _                => path
         };
 

@@ -89,6 +89,7 @@
                   IsReadOnly="True"
                   GridLinesVisibility="Horizontal"
                   Sorting="OnGridSorting"
+                  DoubleTapped="OnGridDoubleTapped"
                   x:Name="ObjectGrid">
 
             <DataGrid.Columns>
@@ -141,6 +142,14 @@
                     </DataGridTextColumn.Header>
                 </DataGridTextColumn>
 
+                <DataGridTextColumn Binding="{Binding ScoreDisplay}"
+                                    Width="90" SortMemberPath="SortScore">
+                    <DataGridTextColumn.Header>
+                        <TextBlock Text="Score"
+                                   ToolTip.Tip="Observability score out of 100 for tonight.&#x0a;&#x0a;Weighted sum of:&#x0a;  Visibility fraction   25 pts&#x0a;  Avg altitude          20 pts&#x0a;  Moon separation       20 pts&#x0a;  Surface brightness    15 pts&#x0a;  Angular size          10 pts&#x0a;  Peak altitude         10 pts"/>
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+
                 <DataGridTextColumn Binding="{Binding DurationDisplay}"
                                     Width="95" SortMemberPath="SortDuration">
                     <DataGridTextColumn.Header>
@@ -183,7 +192,7 @@
                                     Width="90" SortMemberPath="SortPeakAlt">
                     <DataGridTextColumn.Header>
                         <TextBlock Text="Peak Alt"
-                                   ToolTip.Tip="Highest altitude the object reaches during the night.&#x0a;Objects below ~20° suffer from atmospheric distortion and extinction."/>
+                                   ToolTip.Tip="Highest altitude the object reaches during the night, followed by transit direction (N = peaks in northern sky, S = peaks in southern sky).&#x0a;Objects below ~20° suffer from atmospheric distortion and extinction."/>
                     </DataGridTextColumn.Header>
                 </DataGridTextColumn>
 
@@ -200,6 +209,14 @@
                     <DataGridTextColumn.Header>
                         <TextBlock Text="Moon Sep"
                                    ToolTip.Tip="Angular separation from the Moon at the object's peak altitude.&#x0a;Larger = less sky glow from the Moon. Below ~30° the Moon significantly washes out faint objects."/>
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn Binding="{Binding BestSetupDisplay}"
+                                    Width="200" SortMemberPath="SortBestFill">
+                    <DataGridTextColumn.Header>
+                        <TextBlock Text="Best Setup"
+                                   ToolTip.Tip="Which of your imaging setups best matches this object's size, and the FOV it gives. Click the object for a full breakdown of all setups."/>
                     </DataGridTextColumn.Header>
                 </DataGridTextColumn>
 

@@ -63,9 +63,12 @@ public class VisibilityService
         double totalDarkMinutes = (darkEnd - darkStart).TotalMinutes;
         double visibleMinutes = 0;
         double peakAlt = double.MinValue;
+        double peakAz = 0;
         double peakClearance = double.MinValue;
         DateTime peakTime = darkStart;
         double peakRa = fixedRa, peakDec = fixedDec;
+        double visibleAltSum = 0;
+        int visibleAltCount = 0;
 
         // Sample the night
         var steps = new List<(DateTime Time, double Alt, double HorizAlt)>();
@@ -93,12 +96,15 @@ public class VisibilityService
             if (alt > horizAlt)
             {
                 visibleMinutes += stepMinutes;
+                visibleAltSum += alt;
+                visibleAltCount++;
                 double clearance = alt - horizAlt;
                 if (clearance > peakClearance || alt > peakAlt)
                 {
                     if (alt > peakAlt)
                     {
                         peakAlt = alt;
+                        peakAz = az;
                         peakTime = t;
                         peakRa = ra;
                         peakDec = dec;
@@ -144,7 +150,9 @@ public class VisibilityService
             RiseTime = riseTime,
             SetTime = setTime,
             Duration = TimeSpan.FromMinutes(visibleMinutes),
+            AverageAltitudeDegrees = visibleAltCount > 0 ? visibleAltSum / visibleAltCount : 0,
             PeakAltitudeDegrees = peakAlt,
+            PeakAzimuthDegrees = peakAz,
             PeakClearanceDegrees = Math.Max(0, peakClearance),
             PeakTime = peakTime,
             MoonSeparationDegrees = moonSep,
@@ -153,9 +161,9 @@ public class VisibilityService
     }
 
     /// <summary>
-    /// Returns all (time, alt, horizAlt) samples for an object over the night — used for altitude plots.
+    /// Returns all (time, alt, horizAlt, az) samples for an object over the night — used for altitude plots.
     /// </summary>
-    public List<(DateTime Time, double Alt, double HorizAlt)> GetAltitudeSamples(
+    public List<(DateTime Time, double Alt, double HorizAlt, double Az)> GetAltitudeSamples(
         double raDeg, double decDeg,
         bool isFixedCoord,
         SolarSystemBodyType? bodyType,
@@ -165,7 +173,7 @@ public class VisibilityService
         int stepMinutes = 10)
     {
         var (darkStart, darkEnd) = AstronomyService.GetAstronomicalDarkness(observingDate, site);
-        var samples = new List<(DateTime, double, double)>();
+        var samples = new List<(DateTime, double, double, double)>();
         var t = darkStart;
 
         while (t <= darkEnd)
@@ -176,7 +184,7 @@ public class VisibilityService
 
             var (alt, az) = AstronomyService.EquatorialToHorizontal(ra, dec, t,
                 site.LatitudeDegrees, site.LongitudeDegrees);
-            samples.Add((t, alt, horizon.GetAltitudeAt(az)));
+            samples.Add((t, alt, horizon.GetAltitudeAt(az), az));
             t = t.AddMinutes(stepMinutes);
         }
 

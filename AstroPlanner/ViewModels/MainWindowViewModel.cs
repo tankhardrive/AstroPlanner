@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using AstroPlanner.Models;
 using AstroPlanner.Services;
+using AstroPlanner.Views;
 
 namespace AstroPlanner.ViewModels;
 
@@ -37,6 +38,7 @@ public partial class MainWindowViewModel : ViewModelBase
         Settings = new SettingsViewModel(_settingsService);
 
         Settings.SettingsSaved += OnSettingsSaved;
+        PushSetups();
 
         // Wire selection: when planner row changes, update detail
         Planner.PropertyChanged += (_, e) =>
@@ -58,6 +60,14 @@ public partial class MainWindowViewModel : ViewModelBase
         _settings = _settingsService.Load();
         OnPropertyChanged(nameof(SiteName));
         OnPropertyChanged(nameof(HorizonName));
+        PushSetups();
+    }
+
+    private void PushSetups()
+    {
+        var setups = _settings.ImagingSetups;
+        Planner.Setups = setups;
+        Detail.Setups  = setups;
     }
 
     private void OpenDetail(ObjectRowViewModel? row)
@@ -92,6 +102,13 @@ public partial class MainWindowViewModel : ViewModelBase
             OnPropertyChanged(nameof(MoonInfo));
         }
         catch { MoonInfo = ""; }
+    }
+
+    public void OpenFovPreview(ObjectRowViewModel row)
+    {
+        var vm = new FovPreviewViewModel(row, _settings.ImagingSetups);
+        var window = new FovPreviewWindow { DataContext = vm };
+        window.Show();
     }
 
     [RelayCommand]

@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using AstroPlanner.Models;
+using AstroPlanner.Services;
 
 namespace AstroPlanner.ViewModels;
 
@@ -18,6 +19,7 @@ public partial class ObjectRowViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(VisStart12h))]
     [NotifyPropertyChangedFor(nameof(VisEnd12h))]
     [NotifyPropertyChangedFor(nameof(PeakTimeDisplay))]
+    [NotifyPropertyChangedFor(nameof(ScoreDisplay))]
     private VisibilityWindow _visibility = VisibilityWindow.NotComputed;
 
     private TimeZoneInfo _timeZone = TimeZoneInfo.Local;
@@ -122,8 +124,19 @@ public partial class ObjectRowViewModel : ObservableObject
         }
     }
 
+    /// <summary>"N" if the object peaks in the northern sky (az &lt; 90° or &gt; 270°), else "S".</summary>
+    public string TransitDirectionDisplay
+    {
+        get
+        {
+            if (!Visibility.IsVisible) return "";
+            double az = Visibility.PeakAzimuthDegrees;
+            return az < 90 || az > 270 ? "N" : "S";
+        }
+    }
+
     public string PeakAltDisplay => Visibility.IsVisible
-        ? $"{Visibility.PeakAltitudeDegrees:F0}°" : "—";
+        ? $"{Visibility.PeakAltitudeDegrees:F0}° {TransitDirectionDisplay}" : "—";
 
     public string PeakClearanceDisplay => Visibility.IsVisible
         ? $"{Visibility.PeakClearanceDegrees:F0}°" : "—";
@@ -133,6 +146,102 @@ public partial class ObjectRowViewModel : ObservableObject
 
     public string MoonSepDisplay => Visibility.IsVisible
         ? $"{Visibility.MoonSeparationDegrees:F0}°" : "—";
+
+    // ── Observability score (0–100) ──────────────────────────────────────────
+
+    public double Score
+    {
+        get
+        {
+            if (!Visibility.IsVisible) return 0;
+
+            // 1. Visibility fraction (25pts): how much of the dark window it's above horizon
+            double fracScore = Visibility.VisibilityFraction * 25;
+
+            // 2. Average altitude (20pts): full score at ≥45° average
+            double avgScore = Math.Min(Visibility.AverageAltitudeDegrees / 45.0, 1.0) * 20;
+
+            // 3. Moon separation (20pts): full score at ≥90°
+            double moonScore = Math.Min(Visibility.MoonSeparationDegrees / 90.0, 1.0) * 20;
+
+            // 4. Brightness (15pts): prefer surface brightness for extended objects,
+            //    fall back to integrated magnitude for stars/planets/clusters
+            double brightScore;
+            if (DsoSource?.SurfaceBrightness is double sb && sb > 0 && sb < 99)
+            {
+                // Surface brightness in mag/□″: ~10 (very bright) → ~25 (very faint)
+                brightScore = Math.Clamp((25.0 - sb) / 15.0, 0, 1) * 15;
+            }
+            else if (Magnitude is double mag)
+            {
+                // Integrated magnitude: 0 → 15pts, 15 → 0pts
+                brightScore = Math.Clamp((15.0 - mag) / 15.0, 0, 1) * 15;
+            }
+            else
+            {
+                brightScore = 7.5; // neutral when unknown
+            }
+
+            // 5. Size (10pts): log scale — 1′ → ~0pts, 5′ → ~5pts, ≥30′ → 10pts
+            double sizeScore = 0;
+            double? arcmin = DsoSource?.MajorAxisArcmin ?? SolarSystemSource?.AngularDiameterArcmin;
+            if (arcmin is double s && s > 0)
+                sizeScore = Math.Clamp(Math.Log10(Math.Max(s, 1)) / Math.Log10(30), 0, 1) * 10;
+
+            // 6. Peak altitude (10pts): steep penalty below 20°
+            double peak = Visibility.PeakAltitudeDegrees;
+            double peakScore = peak < 10 ? 0
+                : peak < 20 ? (peak - 10) / 10.0 * 3
+                : Math.Min((peak - 20) / 70.0, 1.0) * 7 + 3;
+
+            return Math.Round(fracScore + avgScore + moonScore + brightScore + sizeScore + peakScore, 1);
+        }
+    }
+
+    public string ScoreDisplay => Visibility.IsComputed
+        ? (Visibility.IsVisible ? $"{Score:F0}" : "0")
+        : "…";
+
+    public double SortScore => Visibility.IsVisible ? Score : (Visibility.IsComputed ? 0 : -1);
+
+    // ── Imaging setup ────────────────────────────────────────────────────────
+
+    private IReadOnlyList<ImagingSetup> _setups = [];
+    public IReadOnlyList<ImagingSetup> Setups
+    {
+        get => _setups;
+        set
+        {
+            _setups = value;
+            OnPropertyChanged(nameof(BestSetupDisplay));
+            OnPropertyChanged(nameof(SortBestFill));
+        }
+    }
+
+    public string BestSetupDisplay
+    {
+        get
+        {
+            if (_setups.Count == 0) return "—";
+            if (DsoSource?.MajorAxisArcmin is not double maj || maj <= 0) return "—";
+            var best = FovCalculator.BestSetup(_setups, maj);
+            if (best == null) return "—";
+            var (w, h) = FovCalculator.FovArcmin(best);
+            return $"{best.Name}   {FovCalculator.FormatArcmin(w)}×{FovCalculator.FormatArcmin(h)}";
+        }
+    }
+
+    public double SortBestFill
+    {
+        get
+        {
+            if (_setups.Count == 0 || DsoSource?.MajorAxisArcmin is not double maj || maj <= 0)
+                return -1;
+            var best = FovCalculator.BestSetup(_setups, maj);
+            return best == null ? -1 : Math.Abs(FovCalculator.FillPercent(best, maj)
+                - FovCalculator.TargetFillPct(maj));
+        }
+    }
 
     // Sort keys (numeric, for ViewModel sorting)
     public double SortDuration  => Visibility.Duration.TotalMinutes;

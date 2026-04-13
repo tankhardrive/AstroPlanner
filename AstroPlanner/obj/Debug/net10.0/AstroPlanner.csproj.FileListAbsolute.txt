@@ -16,6 +16,7 @@
 /home/nhartmann/RiderProjects/AstroPlanner/AstroPlanner/bin/Debug/net10.0/Avalonia.Vulkan.dll
 /home/nhartmann/RiderProjects/AstroPlanner/AstroPlanner/bin/Debug/net10.0/Avalonia.dll
 /home/nhartmann/RiderProjects/AstroPlanner/AstroPlanner/bin/Debug/net10.0/Avalonia.Controls.DataGrid.dll
+/home/nhartmann/RiderProjects/AstroPlanner/AstroPlanner/bin/Debug/net10.0/Avalonia.Controls.WebView.dll
 /home/nhartmann/RiderProjects/AstroPlanner/AstroPlanner/bin/Debug/net10.0/Avalonia.Desktop.dll
 /home/nhartmann/RiderProjects/AstroPlanner/AstroPlanner/bin/Debug/net10.0/Avalonia.Fonts.Inter.dll
 /home/nhartmann/RiderProjects/AstroPlanner/AstroPlanner/bin/Debug/net10.0/Avalonia.FreeDesktop.dll
@@ -85,6 +86,7 @@
 /home/nhartmann/RiderProjects/AstroPlanner/AstroPlanner/obj/Debug/net10.0/AstroPlanner.AssemblyInfoInputs.cache
 /home/nhartmann/RiderProjects/AstroPlanner/AstroPlanner/obj/Debug/net10.0/AstroPlanner.AssemblyInfo.cs
 /home/nhartmann/RiderProjects/AstroPlanner/AstroPlanner/obj/Debug/net10.0/AstroPlanner.csproj.CoreCompileInputs.cache
+/home/nhartmann/RiderProjects/AstroPlanner/AstroPlanner/obj/Debug/net10.0/AstroPlanner.sourcelink.json
 /home/nhartmann/RiderProjects/AstroPlanner/AstroPlanner/obj/Debug/net10.0/AstroPla.5A8A7EAA.Up2Date
 /home/nhartmann/RiderProjects/AstroPlanner/AstroPlanner/obj/Debug/net10.0/AstroPlanner.dll
 /home/nhartmann/RiderProjects/AstroPlanner/AstroPlanner/obj/Debug/net10.0/refint/AstroPlanner.dll

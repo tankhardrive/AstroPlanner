@@ -136,6 +136,22 @@
           }
         }
       },
+      "Avalonia.Controls.WebView/12.0.0": {
+        "type": "package",
+        "dependencies": {
+          "Avalonia": "12.0.0"
+        },
+        "compile": {
+          "lib/net10.0/Avalonia.Controls.WebView.dll": {}
+        },
+        "runtime": {
+          "lib/net10.0/Avalonia.Controls.WebView.dll": {}
+        },
+        "build": {
+          "buildTransitive/Avalonia.Controls.WebView.props": {},
+          "buildTransitive/Avalonia.Controls.WebView.targets": {}
+        }
+      },
       "Avalonia.Desktop/12.0.0": {
         "type": "package",
         "dependencies": {
@@ -926,6 +942,30 @@
         "readme.md"
       ]
     },
+    "Avalonia.Controls.WebView/12.0.0": {
+      "sha512": "8GHNanQyuhwZhab5qKdQHYBcNKAVYRlkD47jNsswL7E3WpgTmLo9LolYyt5e4GdKkKZ2B5qIAXGs8GUJlmsuoA==",
+      "type": "package",
+      "path": "avalonia.controls.webview/12.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "avalonia.controls.webview.12.0.0.nupkg.sha512",
+        "avalonia.controls.webview.nuspec",
+        "build/Avalonia.Controls.WebView.props",
+        "build/Avalonia.Controls.WebView.targets",
+        "build/Microsoft.AspNetCore.StaticWebAssets.props",
+        "buildTransitive/Avalonia.Controls.WebView.props",
+        "buildTransitive/Avalonia.Controls.WebView.targets",
+        "icon.png",
+        "lib/net10.0-android36.0/Avalonia.Controls.WebView.dll",
+        "lib/net10.0-android36.0/Avalonia.Controls.WebView.xml",
+        "lib/net10.0-browser1.0/Avalonia.Controls.WebView.dll",
+        "lib/net10.0/Avalonia.Controls.WebView.dll",
+        "lib/net8.0/Avalonia.Controls.WebView.dll",
+        "staticwebassets/av-webview.mjs"
+      ]
+    },
     "Avalonia.Desktop/12.0.0": {
       "sha512": "vBV72rXx7BxGyxake4u7PbUefrzaOGshcNaqYoBwGLJG94aqExLTpF8mkMKkuZaGu2wLwBSl9ypXANd0PPV2uw==",
       "type": "package",
@@ -1700,6 +1740,7 @@
       "AASharp >= *",
       "Avalonia >= 12.0.0",
       "Avalonia.Controls.DataGrid >= 12.0.0",
+      "Avalonia.Controls.WebView >= 12.0.0",
       "Avalonia.Desktop >= 12.0.0",
       "Avalonia.Fonts.Inter >= 12.0.0",
       "Avalonia.Themes.Fluent >= 12.0.0",
@@ -1760,6 +1801,10 @@
             "version": "[12.0.0, )"
           },
           "Avalonia.Controls.DataGrid": {
+            "target": "Package",
+            "version": "[12.0.0, )"
+          },
+          "Avalonia.Controls.WebView": {
             "target": "Package",
             "version": "[12.0.0, )"
           },

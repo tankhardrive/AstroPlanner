@@ -10,8 +10,8 @@ namespace AstroPlanner.Controls;
 /// </summary>
 public class AltitudePlotControl : Control
 {
-    public static readonly StyledProperty<IReadOnlyList<(DateTime Time, double Alt, double HorizAlt)>?> SamplesProperty =
-        AvaloniaProperty.Register<AltitudePlotControl, IReadOnlyList<(DateTime, double, double)>?>(nameof(Samples));
+    public static readonly StyledProperty<IReadOnlyList<(DateTime Time, double Alt, double HorizAlt, double Az)>?> SamplesProperty =
+        AvaloniaProperty.Register<AltitudePlotControl, IReadOnlyList<(DateTime, double, double, double)>?>(nameof(Samples));
 
     public static readonly StyledProperty<DateTime> DarkStartProperty =
         AvaloniaProperty.Register<AltitudePlotControl, DateTime>(nameof(DarkStart));
@@ -23,7 +23,7 @@ public class AltitudePlotControl : Control
         AvaloniaProperty.Register<AltitudePlotControl, TimeZoneInfo>(nameof(TimeZone),
             defaultValue: TimeZoneInfo.Local);
 
-    public IReadOnlyList<(DateTime Time, double Alt, double HorizAlt)>? Samples
+    public IReadOnlyList<(DateTime Time, double Alt, double HorizAlt, double Az)>? Samples
     {
         get => GetValue(SamplesProperty);
         set => SetValue(SamplesProperty, value);
@@ -133,7 +133,7 @@ public class AltitudePlotControl : Control
         using (var gc = horizonGeom.Open())
         {
             bool first = true;
-            foreach (var (t, _, horizAlt) in samples)
+            foreach (var (t, _, horizAlt, _) in samples)
             {
                 var p = ToPlot(t, Math.Max(0, horizAlt));
                 if (first) { gc.BeginFigure(p, false); first = false; }
@@ -142,9 +142,15 @@ public class AltitudePlotControl : Control
         }
         ctx.DrawGeometry(null, horizonPen, horizonGeom);
 
-        // Draw object altitude, split into visible (green) and below-horizon (blue) segments
+        // Draw object altitude, split into visible (green) and below-horizon (blue) segments.
+        // Track each visible run's start, peak, and end indices for direction labelling.
         var aboveGeom = new StreamGeometry();
         var belowGeom = new StreamGeometry();
+
+        var visibleRuns = new List<(int Start, int Peak, int End)>();
+        int runStart = -1, runPeakIdx = -1;
+        double runPeakAlt = double.MinValue;
+        bool inRun = false;
 
         using (var above = aboveGeom.Open())
         using (var below = belowGeom.Open())
@@ -153,7 +159,7 @@ public class AltitudePlotControl : Control
 
             for (int i = 0; i < samples.Count; i++)
             {
-                var (t, alt, horizAlt) = samples[i];
+                var (t, alt, horizAlt, _) = samples[i];
                 bool isAbove = alt > horizAlt;
                 var p = ToPlot(t, Math.Max(0, alt));
 
@@ -164,18 +170,75 @@ public class AltitudePlotControl : Control
                 }
                 else if (isAbove != wasAbove)
                 {
+                    if (inRun && runPeakIdx >= 0)
+                    {
+                        visibleRuns.Add((runStart, runPeakIdx, i - 1));
+                        runStart = runPeakIdx = -1;
+                        runPeakAlt = double.MinValue;
+                        inRun = false;
+                    }
                     above.BeginFigure(p, false);
                     below.BeginFigure(p, false);
                 }
 
-                if (isAbove) above.LineTo(p);
-                else below.LineTo(p);
+                if (isAbove)
+                {
+                    above.LineTo(p);
+                    if (!inRun) { inRun = true; runStart = i; }
+                    if (alt > runPeakAlt) { runPeakAlt = alt; runPeakIdx = i; }
+                }
+                else
+                {
+                    below.LineTo(p);
+                }
 
                 wasAbove = isAbove;
             }
+
+            if (inRun && runPeakIdx >= 0)
+                visibleRuns.Add((runStart, runPeakIdx, samples.Count - 1));
         }
 
         ctx.DrawGeometry(null, altitudePen, belowGeom);
         ctx.DrawGeometry(null, visiblePen, aboveGeom);
+
+        // Draw compass direction labels at the rise, peak, and set of each visible run.
+        // Labels are suppressed when their x positions are too close together.
+        static string AzToCompass(double az)
+        {
+            az = ((az % 360) + 360) % 360;
+            return (az / 45.0 + 0.5) switch
+            {
+                < 1 => "N",  < 2 => "NE", < 3 => "E",  < 4 => "SE",
+                < 5 => "S",  < 6 => "SW", < 7 => "W",  < 8 => "NW",
+                _   => "N",
+            };
+        }
+
+        const double minLabelSpacingPx = 22;
+        var dirBrush = new SolidColorBrush(Color.FromRgb(255, 220, 80));
+
+        foreach (var (startIdx, peakIdx, endIdx) in visibleRuns)
+        {
+            // Collect the three candidate label points: rise, peak, set
+            var candidates = new[] { startIdx, peakIdx, endIdx };
+            double lastLabelX = double.NegativeInfinity;
+
+            foreach (int idx in candidates)
+            {
+                var (t, alt, _, az) = samples[idx];
+                string dir = AzToCompass(az);
+                var pt = ToPlot(t, Math.Max(0, alt));
+
+                // Skip if too close to the previous label
+                if (pt.X - lastLabelX < minLabelSpacingPx) continue;
+
+                var label = new FormattedText(dir,
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    FlowDirection.LeftToRight, typeface, 10, dirBrush);
+                ctx.DrawText(label, new Point(pt.X - label.Width / 2, pt.Y - label.Height - 3));
+                lastLabelX = pt.X;
+            }
+        }
     }
 }
