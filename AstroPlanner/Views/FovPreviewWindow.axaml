@@ -7,7 +7,7 @@
         Width="960" Height="720"
         MinWidth="640" MinHeight="480"
         Background="Black"
-        Icon="/Assets/avalonia-logo.ico">
+        Icon="/Assets/astroplanner.ico">
 
     <Panel>
 

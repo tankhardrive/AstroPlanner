@@ -7,7 +7,7 @@
         mc:Ignorable="d" d:DesignWidth="1400" d:DesignHeight="850"
         x:Class="AstroPlanner.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        Icon="/Assets/avalonia-logo.ico"
+        Icon="/Assets/astroplanner.ico"
         Title="AstroPlanner"
         MinWidth="900" MinHeight="600"
         Width="1400" Height="850">
