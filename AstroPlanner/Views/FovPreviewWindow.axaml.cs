@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
 using Avalonia.Platform;
+using Avalonia.Threading;
 using AstroPlanner.ViewModels;
 
 namespace AstroPlanner.Views;
@@ -18,32 +19,50 @@ public partial class FovPreviewWindow : Window
 
         WebView.EnvironmentRequested += (_, e) =>
         {
-            // ExperimentalOffscreen renders WebKit to an offscreen surface that
-            // Avalonia composites — required for the view to appear on Linux/GTK.
+            Console.WriteLine($"[FOV] EnvironmentRequested: {e.GetType().Name}");
             if (e is GtkWebViewEnvironmentRequestedEventArgs gtk)
+            {
                 gtk.ExperimentalOffscreen = true;
+                Console.WriteLine("[FOV] ExperimentalOffscreen = true applied");
+            }
         };
 
         WebView.AdapterCreated += (_, _) =>
         {
+            Console.WriteLine($"[FOV] AdapterCreated, DataContext={DataContext?.GetType().Name ?? "null"}");
             if (DataContext is FovPreviewViewModel vm)
+            {
+                Console.WriteLine("[FOV] Calling NavigateToString...");
                 WebView.NavigateToString(vm.HtmlContent, new Uri("https://aladin.cds.unistra.fr/"));
+            }
+            else
+            {
+                Console.WriteLine("[FOV] WARNING: DataContext not set at AdapterCreated time");
+            }
         };
 
-        WebView.NavigationCompleted += async (_, _) =>
+        WebView.NavigationCompleted += (_, e) =>
         {
-            // WebKitGTK offscreen surface is only blitted when the native widget is
-            // actually resized. Do an invisible 1-pixel window nudge to trigger it.
-            await Task.Delay(200);
-            var s = ClientSize;
-            ClientSize = new Avalonia.Size(s.Width + 1, s.Height);
-            await Task.Delay(32);
-            ClientSize = s;
+            Console.WriteLine($"[FOV] NavigationCompleted");
+            Dispatcher.UIThread.Post(async () =>
+            {
+                await Task.Delay(300);
+                Console.WriteLine("[FOV] Nudging size...");
+                NudgeSize();
+            }, DispatcherPriority.Background);
         };
 
         RotationSlider.ValueChanged  += OnSliderChanged;
         RotationNumeric.ValueChanged += OnNumericChanged;
         ResetRotationButton.Click    += OnResetClicked;
+    }
+
+    private async void NudgeSize()
+    {
+        var s = ClientSize;
+        ClientSize = new Avalonia.Size(s.Width + 1, s.Height);
+        await Task.Delay(50);
+        ClientSize = s;
     }
 
     private void OnSliderChanged(object? sender, RangeBaseValueChangedEventArgs e)
