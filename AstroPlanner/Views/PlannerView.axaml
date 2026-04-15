@@ -146,9 +146,25 @@
                                     Width="90" SortMemberPath="SortScore">
                     <DataGridTextColumn.Header>
                         <TextBlock Text="Score"
-                                   ToolTip.Tip="Observability score out of 100 for tonight.&#x0a;&#x0a;Weighted sum of:&#x0a;  Visibility fraction   25 pts&#x0a;  Avg altitude          20 pts&#x0a;  Moon separation       20 pts&#x0a;  Surface brightness    15 pts&#x0a;  Angular size          10 pts&#x0a;  Peak altitude         10 pts"/>
+                                   ToolTip.Tip="Observability score out of 100 for tonight.&#x0a;&#x0a;Weighted sum of:&#x0a;  Visibility fraction   25 pts&#x0a;  Avg altitude          20 pts&#x0a;  Moon separation       20 pts&#x0a;  Surface brightness    15 pts&#x0a;  Angular size          10 pts&#x0a;  Peak altitude         10 pts&#x0a;&#x0a;Score is multiplied by sky-quality factor when Bortle class is known."/>
                     </DataGridTextColumn.Header>
                 </DataGridTextColumn>
+
+                <!-- Sky quality column (visible once Bortle class is known) -->
+                <DataGridTemplateColumn Width="90" SortMemberPath="SortSkyQuality" CanUserSort="True">
+                    <DataGridTemplateColumn.Header>
+                        <TextBlock Text="Sky"
+                                   ToolTip.Tip="Sky quality for this object based on Bortle class and surface brightness.&#x0a;&#x0a;Excellent → object easily detected regardless of sky&#x0a;Good      → good sky improves detectability&#x0a;Fair      → requires decent dark sky&#x0a;Poor      → difficult from suburban skies&#x0a;Marginal  → needs near-perfect dark sky"/>
+                    </DataGridTemplateColumn.Header>
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:ObjectRowViewModel">
+                            <TextBlock Text="{Binding SkyQualityLabel}"
+                                       Foreground="{Binding SkyQualityColor}"
+                                       Margin="12,0" VerticalAlignment="Center"
+                                       FontSize="11"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
 
                 <DataGridTextColumn Binding="{Binding DurationDisplay}"
                                     Width="95" SortMemberPath="SortDuration">

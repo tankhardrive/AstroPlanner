@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:AstroPlanner.ViewModels"
         xmlns:views="using:AstroPlanner.Views"
+        xmlns:controls="using:AstroPlanner.Controls"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="1400" d:DesignHeight="850"
@@ -37,13 +38,27 @@
                                     Width="150"
                                     ToolTip.Tip="Observing date"/>
 
-                <!-- Site + horizon + moon info -->
+                <!-- Site + horizon + moon + Bortle info -->
                 <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                     <TextBlock Text="{Binding SiteName}" VerticalAlignment="Center"/>
                     <TextBlock Text="•" VerticalAlignment="Center" Opacity="0.4"/>
                     <TextBlock Text="{Binding HorizonName}" VerticalAlignment="Center" Opacity="0.7"/>
                     <TextBlock Text="•" VerticalAlignment="Center" Opacity="0.4"/>
                     <TextBlock Text="{Binding MoonInfo}" VerticalAlignment="Center" Opacity="0.8"/>
+
+                    <!-- Bortle badge — only shown once fetched -->
+                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center"
+                                IsVisible="{Binding BortleDisplay, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                        <TextBlock Text="•" VerticalAlignment="Center" Opacity="0.4"/>
+                        <Button Content="{Binding BortleDisplay}"
+                                Command="{Binding OpenLightPollutionMapCommand}"
+                                ToolTip.Tip="{Binding BortleToolTip}"
+                                Foreground="{Binding BortleColor}"
+                                VerticalAlignment="Center"
+                                Padding="4,2"
+                                FontSize="12"
+                                FontWeight="SemiBold"/>
+                    </StackPanel>
                 </StackPanel>
 
                 <!-- Calculate button -->
@@ -69,6 +84,20 @@
                         VerticalAlignment="Center"/>
             </Grid>
         </Border>
+
+        <!-- ── Weather strip ── -->
+        <controls:WeatherStripControl
+            DockPanel.Dock="Bottom"
+            Height="50"
+            Hours="{Binding WeatherStrip.Hours}"
+            DarkStart="{Binding WeatherStrip.DarkStart}"
+            DarkEnd="{Binding WeatherStrip.DarkEnd}"
+            TimeZone="{Binding WeatherStrip.TimeZone}"
+            IsLoading="{Binding WeatherStrip.IsLoading}"
+            HasData="{Binding WeatherStrip.HasData}"
+            StatusMessage="{Binding WeatherStrip.StatusMessage}"
+            Command="{Binding OpenWeatherDetailCommand}"
+            Cursor="Hand"/>
 
         <!-- ── Main content area ── -->
         <Grid>

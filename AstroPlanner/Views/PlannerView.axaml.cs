@@ -28,21 +28,22 @@ public partial class PlannerView : UserControl
         // Map SortMemberPath to our ViewModel sort column names
         string col = path switch
         {
-            "PrimaryName"    => "Name",
-            "CatalogIds"     => "Name",
-            "TypeDisplay"    => "Type",
-            "Constellation"  => "Const",
-            "SortMag"        => "Magnitude",
-            "SizeDisplay"    => "Name",
-            "SortDuration"   => "Duration",
-            "VisStartDisplay"=> "VisStart",
-            "VisEndDisplay"  => "VisStart",
-            "SortPeakAlt"    => "PeakAlt",
-            "SortClearance"  => "PeakClr",
-            "SortMoonSep"    => "MoonSep",
-            "SortScore"      => "Score",
-            "SortBestFill"   => "BestSetup",
-            _                => path
+            "PrimaryName"     => "Name",
+            "CatalogIds"      => "Name",
+            "TypeDisplay"     => "Type",
+            "Constellation"   => "Const",
+            "SortMag"         => "Magnitude",
+            "SizeDisplay"     => "Name",
+            "SortDuration"    => "Duration",
+            "VisStartDisplay" => "VisStart",
+            "VisEndDisplay"   => "VisStart",
+            "SortPeakAlt"     => "PeakAlt",
+            "SortClearance"   => "PeakClr",
+            "SortMoonSep"     => "MoonSep",
+            "SortScore"       => "Score",
+            "SortSkyQuality"  => "SkyQuality",
+            "SortBestFill"    => "BestSetup",
+            _                 => path
         };
 
         vm.SortByCommand.Execute(col);

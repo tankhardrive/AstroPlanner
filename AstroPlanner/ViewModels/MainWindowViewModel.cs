@@ -3,17 +3,22 @@ using CommunityToolkit.Mvvm.Input;
 using AstroPlanner.Models;
 using AstroPlanner.Services;
 using AstroPlanner.Views;
+using Avalonia.Media;
+using Avalonia.Threading;
 
 namespace AstroPlanner.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
 {
     private readonly SettingsService _settingsService;
+    private readonly WeatherService _weatherService = new();
+    private readonly LightPollutionService _lightPollutionService = new();
     private AppSettings _settings;
 
     public PlannerViewModel Planner { get; }
     public ObjectDetailViewModel Detail { get; }
     public SettingsViewModel Settings { get; }
+    public WeatherStripViewModel WeatherStrip { get; }
 
     [ObservableProperty] private DateTime? _observingDate = DateTime.Today;
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsNotShowSettings))]
@@ -24,6 +29,38 @@ public partial class MainWindowViewModel : ViewModelBase
     public string HorizonName => _settings.GetActiveLocation().Horizon.Name;
     public string MoonInfo { get; private set; } = "";
 
+    public string BortleDisplay
+    {
+        get
+        {
+            int? b = _settings.GetActiveLocation().BortleClass;
+            return b.HasValue ? $"B{b}" : "";
+        }
+    }
+
+    public string BortleToolTip
+    {
+        get
+        {
+            int? b = _settings.GetActiveLocation().BortleClass;
+            return b.HasValue
+                ? SkyQuality.GetBortleLabel(b.Value) + " — click to open light pollution map"
+                : "Sky quality not yet fetched — will auto-fetch on Calculate";
+        }
+    }
+
+    public IBrush BortleColor
+    {
+        get
+        {
+            int? b = _settings.GetActiveLocation().BortleClass;
+            if (!b.HasValue) return Brushes.Gray;
+            return b.Value <= 3 ? new SolidColorBrush(Color.FromRgb(80, 200, 100))
+                 : b.Value <= 5 ? new SolidColorBrush(Color.FromRgb(220, 180, 50))
+                 : new SolidColorBrush(Color.FromRgb(220, 80, 60));
+        }
+    }
+
     public MainWindowViewModel()
     {
         _settingsService = new SettingsService();
@@ -33,9 +70,10 @@ public partial class MainWindowViewModel : ViewModelBase
         var visibility = new VisibilityService();
         var images = new ImageService();
 
-        Planner = new PlannerViewModel(catalog, visibility);
-        Detail = new ObjectDetailViewModel(images, visibility);
-        Settings = new SettingsViewModel(_settingsService);
+        Planner      = new PlannerViewModel(catalog, visibility);
+        Detail       = new ObjectDetailViewModel(images, visibility);
+        Settings     = new SettingsViewModel(_settingsService);
+        WeatherStrip = new WeatherStripViewModel(_weatherService);
 
         Settings.SettingsSaved += OnSettingsSaved;
         PushSetups();
@@ -47,12 +85,23 @@ public partial class MainWindowViewModel : ViewModelBase
                 OpenDetail(Planner.SelectedRow);
         };
 
-        // Load catalog on background thread so UI shows immediately
-        _ = Task.Run(() =>
-        {
-            Planner.Initialize();
-            Avalonia.Threading.Dispatcher.UIThread.Post(UpdateMoonInfo);
-        });
+        // Load catalog then weather on background thread
+        _ = InitializeAsync();
+    }
+
+    private async Task InitializeAsync()
+    {
+        await Task.Run(() => Planner.Initialize());
+        Dispatcher.UIThread.Post(UpdateMoonInfo);
+        await RefreshWeatherAsync();
+    }
+
+    private Task RefreshWeatherAsync()
+    {
+        var date       = DateOnly.FromDateTime(ObservingDate ?? DateTime.Today);
+        var location   = _settings.GetActiveLocation();
+        var thresholds = _settings.WeatherThresholds;
+        return WeatherStrip.LoadAsync(location, date, thresholds);
     }
 
     private void OnSettingsSaved()
@@ -60,7 +109,12 @@ public partial class MainWindowViewModel : ViewModelBase
         _settings = _settingsService.Load();
         OnPropertyChanged(nameof(SiteName));
         OnPropertyChanged(nameof(HorizonName));
+        OnPropertyChanged(nameof(BortleDisplay));
+        OnPropertyChanged(nameof(BortleToolTip));
+        OnPropertyChanged(nameof(BortleColor));
         PushSetups();
+        Planner.SetBortleClass(_settings.GetActiveLocation().BortleClass);
+        _ = RefreshWeatherAsync();
     }
 
     private void PushSetups()
@@ -89,7 +143,28 @@ public partial class MainWindowViewModel : ViewModelBase
         int step = _settings.VisibilityStepMinutes;
 
         await Planner.CalculateCommand.ExecuteAsync((date, site, horizon, step));
+        Planner.SetBortleClass(loc.BortleClass);
         UpdateMoonInfo();
+
+        // Auto-fetch Bortle class if not yet stored for this location
+        if (loc.BortleClass == null)
+            _ = FetchAndSaveBortleAsync();
+    }
+
+    private async Task FetchAndSaveBortleAsync()
+    {
+        var loc    = _settings.GetActiveLocation();
+        var bortle = await _lightPollutionService.FetchBortleClassAsync(
+            loc.LatitudeDegrees, loc.LongitudeDegrees);
+        if (bortle == null) return;
+
+        loc.BortleClass = bortle;
+        _settingsService.Save(_settings);
+        Planner.SetBortleClass(bortle);
+
+        OnPropertyChanged(nameof(BortleDisplay));
+        OnPropertyChanged(nameof(BortleToolTip));
+        OnPropertyChanged(nameof(BortleColor));
     }
 
     private void UpdateMoonInfo()
@@ -112,10 +187,36 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     [RelayCommand]
+    private void OpenWeatherDetail()
+    {
+        if (WeatherStrip.Hours.Count == 0) return;
+        var location = _settings.GetActiveLocation();
+        var date     = DateOnly.FromDateTime(ObservingDate ?? DateTime.Today);
+        var vm       = new WeatherDetailViewModel(
+            WeatherStrip.Hours,
+            _settings.WeatherThresholds,
+            location.Name,
+            date,
+            location.GetTimeZone());
+        var window = new WeatherDetailWindow { DataContext = vm };
+        window.Show();
+    }
+
+    [RelayCommand]
     private void ToggleSettings() => ShowSettings = !ShowSettings;
+
+    [RelayCommand]
+    private void OpenLightPollutionMap()
+    {
+        var loc = _settings.GetActiveLocation();
+        var ic  = System.Globalization.CultureInfo.InvariantCulture;
+        var url = $"https://www.lightpollutionmap.info/#zoom=11&lat={loc.LatitudeDegrees.ToString("F4", ic)}&lon={loc.LongitudeDegrees.ToString("F4", ic)}&layers=B0FFFFFFFTFFFFFFFFFF";
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true });
+    }
 
     partial void OnObservingDateChanged(DateTime? value)
     {
         UpdateMoonInfo();
+        _ = RefreshWeatherAsync();
     }
 }

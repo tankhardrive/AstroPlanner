@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using AstroPlanner.Models;
 using AstroPlanner.Services;
+using Avalonia.Media;
 
 namespace AstroPlanner.ViewModels;
 
@@ -21,6 +22,22 @@ public partial class ObjectRowViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(PeakTimeDisplay))]
     [NotifyPropertyChangedFor(nameof(ScoreDisplay))]
     private VisibilityWindow _visibility = VisibilityWindow.NotComputed;
+
+    private int? _bortleClass;
+    public int? BortleClass
+    {
+        get => _bortleClass;
+        set
+        {
+            _bortleClass = value;
+            OnPropertyChanged(nameof(Score));
+            OnPropertyChanged(nameof(ScoreDisplay));
+            OnPropertyChanged(nameof(SortScore));
+            OnPropertyChanged(nameof(SkyFactor));
+            OnPropertyChanged(nameof(SkyQualityLabel));
+            OnPropertyChanged(nameof(SkyQualityColor));
+        }
+    }
 
     private TimeZoneInfo _timeZone = TimeZoneInfo.Local;
     public TimeZoneInfo TimeZone
@@ -194,7 +211,8 @@ public partial class ObjectRowViewModel : ObservableObject
                 : peak < 20 ? (peak - 10) / 10.0 * 3
                 : Math.Min((peak - 20) / 70.0, 1.0) * 7 + 3;
 
-            return Math.Round(fracScore + avgScore + moonScore + brightScore + sizeScore + peakScore, 1);
+            double rawScore = fracScore + avgScore + moonScore + brightScore + sizeScore + peakScore;
+            return Math.Round(rawScore * SkyFactor, 1);
         }
     }
 
@@ -203,6 +221,47 @@ public partial class ObjectRowViewModel : ObservableObject
         : "…";
 
     public double SortScore => Visibility.IsVisible ? Score : (Visibility.IsComputed ? 0 : -1);
+
+    // ── Sky quality (Bortle) ─────────────────────────────────────────────────
+
+    /// <summary>
+    /// Detectability factor [0–1] based on Bortle class and object surface brightness.
+    /// Returns 1.0 when Bortle class is unknown (no penalty applied).
+    /// </summary>
+    public double SkyFactor
+    {
+        get
+        {
+            if (_bortleClass == null || DsoSource == null) return 1.0;
+            return SkyQuality.ComputeDetectabilityFactor(DsoSource, _bortleClass.Value);
+        }
+    }
+
+    /// <summary>Short label: Excellent / Good / Fair / Poor / Marginal, or "—" when no Bortle data.</summary>
+    public string SkyQualityLabel
+    {
+        get
+        {
+            if (_bortleClass == null || DsoSource == null) return "—";
+            return SkyQuality.GetQualityLabel(SkyFactor);
+        }
+    }
+
+    /// <summary>Color for the sky quality label.</summary>
+    public IBrush SkyQualityColor
+    {
+        get
+        {
+            double f = SkyFactor;
+            if (_bortleClass == null || DsoSource == null) return Brushes.Gray;
+            return f >= 0.70 ? new SolidColorBrush(Color.FromRgb(80, 200, 100))
+                 : f >= 0.45 ? new SolidColorBrush(Color.FromRgb(220, 180, 50))
+                 : new SolidColorBrush(Color.FromRgb(220, 80, 60));
+        }
+    }
+
+    /// <summary>Numeric sort key for sky quality (higher = better).</summary>
+    public double SortSkyQuality => _bortleClass != null && DsoSource != null ? SkyFactor : 2.0;
 
     // ── Imaging setup ────────────────────────────────────────────────────────
 

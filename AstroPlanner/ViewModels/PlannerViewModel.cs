@@ -87,6 +87,16 @@ public partial class PlannerViewModel : ViewModelBase
         _visibility = visibility;
     }
 
+    /// <summary>
+    /// Pushes a Bortle class value to all rows so that sky-quality scores update immediately
+    /// without re-running the full visibility calculation.
+    /// </summary>
+    public void SetBortleClass(int? bortle)
+    {
+        foreach (var row in _allRows) row.BortleClass = bortle;
+        ApplyFilterAndSort();
+    }
+
     // Called by MainWindowViewModel after loading
     public void Initialize()
     {
@@ -266,8 +276,9 @@ public partial class PlannerViewModel : ViewModelBase
                 "PeakAlt"   => filtered.OrderBy(r => r.SortPeakAlt),
                 "PeakClr"   => filtered.OrderBy(r => r.SortClearance),
                 "MoonSep"   => filtered.OrderBy(r => r.SortMoonSep),
-                "Score"     => filtered.OrderBy(r => r.SortScore),
-                "BestSetup" => filtered.OrderBy(r => r.SortBestFill),
+                "Score"      => filtered.OrderBy(r => r.SortScore),
+                "SkyQuality" => filtered.OrderBy(r => r.SortSkyQuality),
+                "BestSetup"  => filtered.OrderBy(r => r.SortBestFill),
                 "VisStart"  => filtered.OrderBy(r => r.Visibility.RiseTime ?? DateTime.MaxValue),
                 _           => filtered.OrderBy(r => r.SortDuration),
             };
@@ -284,8 +295,9 @@ public partial class PlannerViewModel : ViewModelBase
                 "PeakAlt"   => filtered.OrderByDescending(r => r.SortPeakAlt),
                 "PeakClr"   => filtered.OrderByDescending(r => r.SortClearance),
                 "MoonSep"   => filtered.OrderByDescending(r => r.SortMoonSep),
-                "Score"     => filtered.OrderByDescending(r => r.SortScore),
-                "BestSetup" => filtered.OrderByDescending(r => r.SortBestFill),
+                "Score"      => filtered.OrderByDescending(r => r.SortScore),
+                "SkyQuality" => filtered.OrderByDescending(r => r.SortSkyQuality),
+                "BestSetup"  => filtered.OrderByDescending(r => r.SortBestFill),
                 "VisStart"  => filtered.OrderByDescending(r => r.Visibility.RiseTime ?? DateTime.MinValue),
                 _           => filtered.OrderByDescending(r => r.SortDuration),
             };

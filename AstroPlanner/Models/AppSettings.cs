@@ -10,6 +10,8 @@ public class AppSettings
 
     public List<ImagingSetup> ImagingSetups { get; set; } = [];
 
+    public WeatherThresholds WeatherThresholds { get; set; } = new();
+
     // ── Legacy fields — kept only for one-time migration from old settings files ──────────────
     public ObservationSite? Site { get; set; }
     public List<HorizonProfile>? HorizonProfiles { get; set; }

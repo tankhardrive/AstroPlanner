@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using AstroPlanner.Models;
 using AstroPlanner.Services;
+using System.Globalization;
 
 namespace AstroPlanner.ViewModels;
 
@@ -46,6 +47,23 @@ public partial class SettingsViewModel : ViewModelBase
     // ── Computation ──────────────────────────────────────────────────────────
     [ObservableProperty] private decimal _stepMinutes = 15;
 
+    // ── Weather thresholds ───────────────────────────────────────────────────
+    [ObservableProperty] private decimal _maxCloudCover;
+    [ObservableProperty] private decimal _maxWindSpeed;
+    [ObservableProperty] private decimal _minWindChill;
+    [ObservableProperty] private decimal _maxHumidity;
+    [ObservableProperty] private decimal _maxPrecipProbability;
+    [ObservableProperty] private decimal _minVisibility;
+    [ObservableProperty] private decimal _maxSeeing;
+    [ObservableProperty] private decimal _minTransparency;
+    [ObservableProperty] private decimal _maxMoonIllumination;
+    [ObservableProperty] private string _weatherSaveMessage = "";
+
+    // ── Bortle / sky quality ─────────────────────────────────────────────────
+    [ObservableProperty] private decimal? _bortleOverride;
+    [ObservableProperty] private string _bortleFetchMessage = "";
+    private readonly LightPollutionService _lightPollutionService = new();
+
     // ── Imaging setups ───────────────────────────────────────────────────────
     [ObservableProperty] private List<ImagingSetupViewModel> _setupRows = [];
     [ObservableProperty] private ImagingSetupViewModel? _selectedSetup;
@@ -61,6 +79,22 @@ public partial class SettingsViewModel : ViewModelBase
         StepMinutes = (decimal)_settings.VisibilityStepMinutes;
         RebuildRows();
         RebuildSetupRows();
+        LoadWeatherThresholds();
+    }
+
+    private void LoadWeatherThresholds()
+    {
+        var wt = _settings.WeatherThresholds;
+        MaxCloudCover         = wt.MaxCloudCoverPercent;
+        MaxWindSpeed          = wt.MaxWindSpeedMph;
+        MinWindChill          = wt.MinWindChillF;
+        MaxHumidity           = wt.MaxHumidityPercent;
+        MaxPrecipProbability  = wt.MaxPrecipProbabilityPercent;
+        MinVisibility         = wt.MinVisibilityMiles;
+        MaxSeeing             = wt.MaxSeeing;
+        MinTransparency       = wt.MinTransparency;
+        MaxMoonIllumination   = wt.MaxMoonIlluminationPercent;
+        WeatherSaveMessage    = "";
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
@@ -89,6 +123,8 @@ public partial class SettingsViewModel : ViewModelBase
         HorizonName    = loc.Horizon.Name == "Flat (0°)" ? "" : loc.Horizon.Name;
         HorizonError   = "";
         HorizonSummary = new LocationRowViewModel(loc, false).HorizonSummary;
+        BortleOverride = loc.BortleClass.HasValue ? (decimal)loc.BortleClass.Value : null;
+        BortleFetchMessage = "";
     }
 
     partial void OnSelectedLocationChanged(ObservationLocation? value)
@@ -184,6 +220,7 @@ public partial class SettingsViewModel : ViewModelBase
         SelectedLocation.LongitudeDegrees = lon;
         SelectedLocation.ElevationMeters  = elev;
         SelectedLocation.TimeZoneId       = TimeZoneId.Trim();
+        SelectedLocation.BortleClass      = BortleOverride.HasValue ? (int)BortleOverride.Value : null;
 
         _settings.VisibilityStepMinutes = Math.Clamp((int)StepMinutes, 1, 60);
         _settingsService.Save(_settings);
@@ -272,6 +309,50 @@ public partial class SettingsViewModel : ViewModelBase
         SelectedSetup = SetupRows.FirstOrDefault(r => r.Source.Id == SelectedSetup.Source.Id)
                         ?? SelectedSetup;
         SetupError = "Saved.";
+        SettingsSaved?.Invoke();
+    }
+
+    [RelayCommand]
+    private async Task FetchBortleAsync()
+    {
+        if (SelectedLocation == null) return;
+
+        // Parse current lat/lon from editor fields so user doesn't have to save first
+        var ic = CultureInfo.InvariantCulture;
+        double lat = double.TryParse(Latitude,  NumberStyles.Float, ic, out var la) ? la : SelectedLocation.LatitudeDegrees;
+        double lon = double.TryParse(Longitude, NumberStyles.Float, ic, out var lo) ? lo : SelectedLocation.LongitudeDegrees;
+
+        BortleFetchMessage = "Fetching…";
+        var bortle = await _lightPollutionService.FetchBortleClassAsync(lat, lon);
+        if (bortle.HasValue)
+        {
+            BortleOverride               = (decimal)bortle.Value;
+            SelectedLocation.BortleClass = bortle.Value;
+            _settingsService.Save(_settings);
+            BortleFetchMessage = SkyQuality.GetBortleLabel(bortle.Value);
+            SettingsSaved?.Invoke();
+        }
+        else
+        {
+            BortleFetchMessage = "Fetch failed — check your connection.";
+        }
+    }
+
+    [RelayCommand]
+    private void SaveWeatherThresholds()
+    {
+        var wt = _settings.WeatherThresholds;
+        wt.MaxCloudCoverPercent        = (int)Math.Clamp(MaxCloudCover,        0, 100);
+        wt.MaxWindSpeedMph             = (int)Math.Clamp(MaxWindSpeed,         0, 200);
+        wt.MinWindChillF               = (int)Math.Clamp(MinWindChill,        -100, 130);
+        wt.MaxHumidityPercent          = (int)Math.Clamp(MaxHumidity,          0, 100);
+        wt.MaxPrecipProbabilityPercent = (int)Math.Clamp(MaxPrecipProbability, 0, 100);
+        wt.MinVisibilityMiles          = (int)Math.Clamp(MinVisibility,        0, 100);
+        wt.MaxSeeing                   = (int)Math.Clamp(MaxSeeing,            1, 8);
+        wt.MinTransparency             = (int)Math.Clamp(MinTransparency,      1, 8);
+        wt.MaxMoonIlluminationPercent  = (int)Math.Clamp(MaxMoonIllumination,  0, 100);
+        _settingsService.Save(_settings);
+        WeatherSaveMessage = "Saved.";
         SettingsSaved?.Invoke();
     }
 

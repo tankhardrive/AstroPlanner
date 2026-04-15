@@ -120,6 +120,35 @@
                                        Width="115" HorizontalAlignment="Left"/>
                     </Grid>
 
+                    <!-- Bortle class — separate from the grid so the label and input have plenty of room -->
+                    <Border BorderThickness="1"
+                            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                            CornerRadius="3"
+                            Padding="10,8">
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Bortle Class (1–9)"
+                                       FontWeight="SemiBold" FontSize="13"
+                                       ToolTip.Tip="Sky darkness scale: 1 = excellent dark sky, 9 = inner-city sky. Used to weight per-object detectability scores."/>
+                            <TextBlock Text="1 = Excellent dark sky  ·  5 = Suburban  ·  9 = Inner-city"
+                                       FontSize="11" Opacity="0.55"/>
+                            <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,2,0,0">
+                                <NumericUpDown Value="{Binding BortleOverride}"
+                                               Minimum="1" Maximum="9" Increment="1"
+                                               FormatString="F0"
+                                               Width="130"
+                                               ToolTip.Tip="Leave blank — will be auto-fetched on the next Calculate"/>
+                                <Button Content="Fetch from map API"
+                                        Command="{Binding FetchBortleCommand}"
+                                        Padding="10,4" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding BortleFetchMessage}"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource SystemAccentColorLight2}"
+                                       IsVisible="{Binding BortleFetchMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+
                     <TextBlock Text="{Binding LocError}"
                                FontSize="12"
                                Foreground="{DynamicResource SystemAccentColorLight2}"
@@ -297,6 +326,95 @@
 
                     <Button Content="Save Setup"
                             Command="{Binding SaveSetupCommand}"
+                            HorizontalAlignment="Left"/>
+                </StackPanel>
+            </Border>
+
+            <!-- ── Weather Thresholds ── -->
+            <Border BorderThickness="1"
+                    BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                    CornerRadius="4"
+                    Padding="16">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Weather Thresholds" FontSize="15" FontWeight="SemiBold"/>
+                    <TextBlock FontSize="11" Opacity="0.55" TextWrapping="Wrap"
+                               Text="Hours that exceed any threshold are highlighted red in the weather detail view. The strip gradient uses absolute scores independent of these values."/>
+
+                    <Grid ColumnDefinitions="260,*,60" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8">
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Max Cloud Cover" VerticalAlignment="Center"/>
+                        <NumericUpDown Grid.Row="0" Grid.Column="1"
+                                       Value="{Binding MaxCloudCover}"
+                                       Minimum="0" Maximum="100" Increment="5"
+                                       Width="115" HorizontalAlignment="Left"/>
+                        <TextBlock Grid.Row="0" Grid.Column="2" Text="%" VerticalAlignment="Center" Opacity="0.6"/>
+
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Max Wind Speed" VerticalAlignment="Center"/>
+                        <NumericUpDown Grid.Row="1" Grid.Column="1"
+                                       Value="{Binding MaxWindSpeed}"
+                                       Minimum="0" Maximum="200" Increment="5"
+                                       Width="115" HorizontalAlignment="Left"/>
+                        <TextBlock Grid.Row="1" Grid.Column="2" Text="mph" VerticalAlignment="Center" Opacity="0.6"/>
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Min Wind Chill" VerticalAlignment="Center"/>
+                        <NumericUpDown Grid.Row="2" Grid.Column="1"
+                                       Value="{Binding MinWindChill}"
+                                       Minimum="-100" Maximum="130" Increment="5"
+                                       Width="115" HorizontalAlignment="Left"/>
+                        <TextBlock Grid.Row="2" Grid.Column="2" Text="°F" VerticalAlignment="Center" Opacity="0.6"/>
+
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Max Humidity" VerticalAlignment="Center"/>
+                        <NumericUpDown Grid.Row="3" Grid.Column="1"
+                                       Value="{Binding MaxHumidity}"
+                                       Minimum="0" Maximum="100" Increment="5"
+                                       Width="115" HorizontalAlignment="Left"/>
+                        <TextBlock Grid.Row="3" Grid.Column="2" Text="%" VerticalAlignment="Center" Opacity="0.6"/>
+
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Max Precip Probability" VerticalAlignment="Center"/>
+                        <NumericUpDown Grid.Row="4" Grid.Column="1"
+                                       Value="{Binding MaxPrecipProbability}"
+                                       Minimum="0" Maximum="100" Increment="5"
+                                       Width="115" HorizontalAlignment="Left"/>
+                        <TextBlock Grid.Row="4" Grid.Column="2" Text="%" VerticalAlignment="Center" Opacity="0.6"/>
+
+                        <TextBlock Grid.Row="5" Grid.Column="0" Text="Min Visibility" VerticalAlignment="Center"/>
+                        <NumericUpDown Grid.Row="5" Grid.Column="1"
+                                       Value="{Binding MinVisibility}"
+                                       Minimum="0" Maximum="100" Increment="1"
+                                       Width="115" HorizontalAlignment="Left"/>
+                        <TextBlock Grid.Row="5" Grid.Column="2" Text="mi" VerticalAlignment="Center" Opacity="0.6"/>
+
+                        <TextBlock Grid.Row="6" Grid.Column="0" Text="Max Seeing  (1=best, 8=worst)" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                        <NumericUpDown Grid.Row="6" Grid.Column="1"
+                                       Value="{Binding MaxSeeing}"
+                                       Minimum="1" Maximum="8" Increment="1"
+                                       Width="115" HorizontalAlignment="Left"/>
+                        <TextBlock Grid.Row="6" Grid.Column="2" Text="1–8" VerticalAlignment="Center" Opacity="0.6"/>
+
+                        <TextBlock Grid.Row="7" Grid.Column="0" Text="Min Transparency  (1=worst, 8=best)" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                        <NumericUpDown Grid.Row="7" Grid.Column="1"
+                                       Value="{Binding MinTransparency}"
+                                       Minimum="1" Maximum="8" Increment="1"
+                                       Width="115" HorizontalAlignment="Left"/>
+                        <TextBlock Grid.Row="7" Grid.Column="2" Text="1–8" VerticalAlignment="Center" Opacity="0.6"/>
+
+                        <TextBlock Grid.Row="8" Grid.Column="0" Text="Max Moon Illumination" VerticalAlignment="Center"/>
+                        <NumericUpDown Grid.Row="8" Grid.Column="1"
+                                       Value="{Binding MaxMoonIllumination}"
+                                       Minimum="0" Maximum="100" Increment="5"
+                                       Width="115" HorizontalAlignment="Left"/>
+                        <TextBlock Grid.Row="8" Grid.Column="2" Text="%" VerticalAlignment="Center" Opacity="0.6"/>
+
+                    </Grid>
+
+                    <TextBlock Text="{Binding WeatherSaveMessage}"
+                               FontSize="12"
+                               Foreground="{DynamicResource SystemAccentColorLight2}"
+                               IsVisible="{Binding WeatherSaveMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                               TextWrapping="Wrap"/>
+
+                    <Button Content="Save Weather Settings"
+                            Command="{Binding SaveWeatherThresholdsCommand}"
                             HorizontalAlignment="Left"/>
                 </StackPanel>
             </Border>

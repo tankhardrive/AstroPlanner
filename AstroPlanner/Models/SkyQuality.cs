@@ -1,0 +1,94 @@
+namespace AstroPlanner.Models;
+
+/// <summary>
+/// Static helpers for sky quality (Bortle scale) and per-object detectability factors.
+/// </summary>
+public static class SkyQuality
+{
+    // Sky background brightness (mag/arcsec²) per Bortle class (index 1–9)
+    private static readonly double[] SkyBrightnessMag =
+    [
+        0,     // index 0 unused
+        22.0,  // B1 — Excellent dark-sky site
+        21.5,  // B2
+        21.0,  // B3
+        20.4,  // B4
+        19.5,  // B5
+        18.5,  // B6
+        17.5,  // B7
+        16.5,  // B8
+        15.5,  // B9 — Inner-city sky
+    ];
+
+    // Fractional sensitivity to light pollution by type.
+    // Higher = more strongly degraded by a brighter sky.
+    private static readonly Dictionary<ObjectType, double> TypeSensitivity = new()
+    {
+        { ObjectType.Galaxy,             0.80 },
+        { ObjectType.GalaxyPair,         0.80 },
+        { ObjectType.GalaxyTriplet,      0.80 },
+        { ObjectType.GalaxyGroup,        0.80 },
+        { ObjectType.OpenCluster,        0.05 },
+        { ObjectType.GlobularCluster,    0.25 },
+        { ObjectType.ClusterNebula,      0.50 },
+        { ObjectType.PlanetaryNebula,    0.15 },
+        { ObjectType.EmissionNebula,     0.65 },
+        { ObjectType.ReflectionNebula,   0.65 },
+        { ObjectType.SupernovaRemnant,   0.85 },
+        { ObjectType.HiiRegion,          0.85 },
+        { ObjectType.DarkNebula,         0.85 },
+        { ObjectType.BrightNebula,       0.50 },
+        { ObjectType.Nebula,             0.65 },
+        { ObjectType.StellarAssociation, 0.40 },
+        { ObjectType.Star,               0.02 },
+        { ObjectType.DoubleStar,         0.02 },
+    };
+
+    /// <summary>
+    /// Computes a detectability factor [0–1] for a DSO under a sky of the given Bortle class.
+    /// Uses surface-brightness contrast when available; falls back to type-sensitivity tiers.
+    /// </summary>
+    public static double ComputeDetectabilityFactor(DeepSkyObject dso, int bortle)
+    {
+        int b = Math.Clamp(bortle, 1, 9);
+        double skyBrightness = SkyBrightnessMag[b];
+
+        // Primary path: surface brightness contrast
+        if (dso.SurfaceBrightness is double objectSB && objectSB > 0 && objectSB < 99)
+        {
+            // contrast > ~2 → very detectable; contrast < 0.1 → essentially impossible
+            double contrast = Math.Pow(10, (skyBrightness - objectSB) / 2.5);
+            return Math.Clamp((contrast - 0.1) / 1.9, 0, 1);
+        }
+
+        // Fallback: type-based sensitivity
+        double sensitivity   = TypeSensitivity.TryGetValue(dso.Type, out var s) ? s : 0.50;
+        double bortlePenalty = (b - 1) / 8.0;   // 0 at B1, 1 at B9
+        return Math.Clamp(1.0 - sensitivity * bortlePenalty, 0, 1);
+    }
+
+    /// <summary>Short quality label for a detectability factor.</summary>
+    public static string GetQualityLabel(double factor) => factor switch
+    {
+        >= 0.90 => "Excellent",
+        >= 0.70 => "Good",
+        >= 0.45 => "Fair",
+        >= 0.20 => "Poor",
+        _       => "Marginal",
+    };
+
+    /// <summary>Descriptive label for a Bortle class value.</summary>
+    public static string GetBortleLabel(int bortle) => bortle switch
+    {
+        1 => "B1 – Excellent dark-sky site",
+        2 => "B2 – Typical truly dark site",
+        3 => "B3 – Rural sky",
+        4 => "B4 – Rural/suburban transition",
+        5 => "B5 – Suburban sky",
+        6 => "B6 – Bright suburban sky",
+        7 => "B7 – Suburban/urban transition",
+        8 => "B8 – City sky",
+        9 => "B9 – Inner-city sky",
+        _ => $"B{bortle}",
+    };
+}

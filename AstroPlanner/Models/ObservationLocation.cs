@@ -16,6 +16,12 @@ public class ObservationLocation
 
     public HorizonProfile Horizon { get; set; } = HorizonProfile.Flat();
 
+    /// <summary>
+    /// Bortle class (1–9) for this location.
+    /// Null = not yet fetched; auto-fetched on first Calculate.
+    /// </summary>
+    public int? BortleClass { get; set; }
+
     /// <summary>Project this location into the ObservationSite shape that the astronomy services expect.</summary>
     public ObservationSite ToSite() => new()
     {

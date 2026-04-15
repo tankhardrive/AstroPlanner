@@ -1,0 +1,173 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:AstroPlanner.ViewModels"
+        xmlns:controls="using:AstroPlanner.Controls"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="860" d:DesignHeight="700"
+        x:Class="AstroPlanner.Views.WeatherDetailWindow"
+        x:DataType="vm:WeatherDetailViewModel"
+        Title="Weather Forecast"
+        Width="860" Height="700"
+        MinWidth="700" MinHeight="500"
+        CanResize="True">
+
+    <!-- Header -->
+    <Grid RowDefinitions="Auto,*">
+
+        <Border Grid.Row="0"
+                Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}"
+                BorderThickness="0,0,0,1"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                Padding="20,12">
+            <TextBlock Text="{Binding Title}"
+                       FontSize="15" FontWeight="SemiBold"/>
+        </Border>
+
+        <ScrollViewer Grid.Row="1">
+            <StackPanel Spacing="0" Margin="20,16,20,20">
+
+                <!-- ── Heatmap chart ── -->
+                <TextBlock Text="Conditions by Hour"
+                           FontSize="13" FontWeight="SemiBold"
+                           Opacity="0.7" Margin="0,0,0,8"/>
+
+                <controls:WeatherChartControl
+                    Hours="{Binding Hours}"
+                    TimeZone="{Binding TimeZone}"
+                    Height="228"/>
+
+                <!-- ── Table ── -->
+                <TextBlock Text="Hourly Detail"
+                           FontSize="13" FontWeight="SemiBold"
+                           Opacity="0.7" Margin="0,20,0,8"/>
+
+                <!-- Table header -->
+                <Border Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}"
+                        CornerRadius="4,4,0,0"
+                        Padding="0,6">
+                    <Grid ColumnDefinitions="58,52,58,62,52,52,62,110,82,72,72,52">
+                        <TextBlock Grid.Column="0"  Text="Time"         FontSize="10" FontWeight="SemiBold" Opacity="0.7" HorizontalAlignment="Center"/>
+                        <TextBlock Grid.Column="1"  Text="Cloud"        FontSize="10" FontWeight="SemiBold" Opacity="0.7" HorizontalAlignment="Center"/>
+                        <TextBlock Grid.Column="2"  Text="Wind"         FontSize="10" FontWeight="SemiBold" Opacity="0.7" HorizontalAlignment="Center"/>
+                        <TextBlock Grid.Column="3"  Text="Wind Chill"   FontSize="10" FontWeight="SemiBold" Opacity="0.7" HorizontalAlignment="Center"/>
+                        <TextBlock Grid.Column="4"  Text="Humid"        FontSize="10" FontWeight="SemiBold" Opacity="0.7" HorizontalAlignment="Center"/>
+                        <TextBlock Grid.Column="5"  Text="Precip"       FontSize="10" FontWeight="SemiBold" Opacity="0.7" HorizontalAlignment="Center"/>
+                        <TextBlock Grid.Column="6"  Text="Visibility"   FontSize="10" FontWeight="SemiBold" Opacity="0.7" HorizontalAlignment="Center"/>
+                        <TextBlock Grid.Column="7"  Text="Seeing"       FontSize="10" FontWeight="SemiBold" Opacity="0.7" HorizontalAlignment="Center"/>
+                        <TextBlock Grid.Column="8"  Text="Transparency" FontSize="10" FontWeight="SemiBold" Opacity="0.7" HorizontalAlignment="Center"/>
+                        <TextBlock Grid.Column="9"  Text="Moon"         FontSize="10" FontWeight="SemiBold" Opacity="0.7" HorizontalAlignment="Center"/>
+                        <TextBlock Grid.Column="10" Text="Planets"      FontSize="10" FontWeight="SemiBold" Opacity="0.7" HorizontalAlignment="Center"/>
+                        <TextBlock Grid.Column="11" Text="Score"        FontSize="10" FontWeight="SemiBold" Opacity="0.7" HorizontalAlignment="Center"/>
+                    </Grid>
+                </Border>
+
+                <!-- Table rows -->
+                <ItemsControl ItemsSource="{Binding HourRows}"
+                              BorderThickness="0,0,0,1"
+                              BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:WeatherHourViewModel">
+                            <Border BorderThickness="0,0,0,1"
+                                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+                                <Grid ColumnDefinitions="58,52,58,62,52,52,62,110,82,72,72,52"
+                                      MinHeight="30">
+
+                                    <!-- Time -->
+                                    <Border Grid.Column="0" Padding="4,4">
+                                        <TextBlock Text="{Binding TimeLabel}"
+                                                   FontSize="11" FontWeight="SemiBold"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+
+                                    <!-- Cloud Cover -->
+                                    <Border Grid.Column="1" Background="{Binding CloudBackground}" Padding="4,4">
+                                        <TextBlock Text="{Binding CloudDisplay}"
+                                                   FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+
+                                    <!-- Wind -->
+                                    <Border Grid.Column="2" Background="{Binding WindBackground}" Padding="4,4">
+                                        <TextBlock Text="{Binding WindDisplay}"
+                                                   FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+
+                                    <!-- Wind Chill -->
+                                    <Border Grid.Column="3" Background="{Binding WindChillBackground}" Padding="4,4">
+                                        <TextBlock Text="{Binding WindChillDisplay}"
+                                                   FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+
+                                    <!-- Humidity -->
+                                    <Border Grid.Column="4" Background="{Binding HumidityBackground}" Padding="4,4">
+                                        <TextBlock Text="{Binding HumidityDisplay}"
+                                                   FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+
+                                    <!-- Precip -->
+                                    <Border Grid.Column="5" Background="{Binding PrecipBackground}" Padding="4,4">
+                                        <TextBlock Text="{Binding PrecipDisplay}"
+                                                   FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+
+                                    <!-- Visibility -->
+                                    <Border Grid.Column="6" Background="{Binding VisibilityBackground}" Padding="4,4">
+                                        <TextBlock Text="{Binding VisibilityDisplay}"
+                                                   FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+
+                                    <!-- Seeing -->
+                                    <Border Grid.Column="7" Background="{Binding SeeingBackground}" Padding="4,4">
+                                        <TextBlock Text="{Binding SeeingDisplay}"
+                                                   FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                   TextWrapping="NoWrap"/>
+                                    </Border>
+
+                                    <!-- Transparency -->
+                                    <Border Grid.Column="8" Background="{Binding TransparencyBackground}" Padding="4,4">
+                                        <TextBlock Text="{Binding TransparencyDisplay}"
+                                                   FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                   TextWrapping="NoWrap"/>
+                                    </Border>
+
+                                    <!-- Moon -->
+                                    <Border Grid.Column="9" Background="{Binding MoonBackground}" Padding="4,4">
+                                        <TextBlock Text="{Binding MoonDisplay}"
+                                                   FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+
+                                    <!-- Planets -->
+                                    <Border Grid.Column="10" Padding="4,4">
+                                        <TextBlock Text="{Binding PlanetsDisplay}"
+                                                   FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                   TextWrapping="NoWrap"/>
+                                    </Border>
+
+                                    <!-- Score -->
+                                    <Border Grid.Column="11" Background="{Binding ScoreBackground}" Padding="4,4">
+                                        <TextBlock Text="{Binding ScoreDisplay}"
+                                                   Foreground="{Binding ScoreColorBrush}"
+                                                   FontSize="11" FontWeight="SemiBold"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <!-- Legend -->
+                <Border Margin="0,14,0,0"
+                        Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}"
+                        CornerRadius="4" Padding="12,8">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Notes" FontSize="11" FontWeight="SemiBold" Opacity="0.7"/>
+                        <TextBlock FontSize="10" Opacity="0.55" TextWrapping="Wrap"
+                                   Text="Red-tinted cells exceed your configured threshold in Settings › Weather.  Seeing: 1=excellent (&lt;0.5″), 8=terrible (&gt;2.5″).  Transparency: 1=worst, 8=best.  Weather data from Open-Meteo (open-meteo.com). Seeing/transparency from 7timer.info (3-hour resolution, up to ~7 days)."/>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Window>
