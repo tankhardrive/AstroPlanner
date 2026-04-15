@@ -62,6 +62,7 @@ public partial class SettingsViewModel : ViewModelBase
     // ── Bortle / sky quality ─────────────────────────────────────────────────
     [ObservableProperty] private decimal? _bortleOverride;
     [ObservableProperty] private string _bortleFetchMessage = "";
+    [ObservableProperty] private bool _applySkyQualityToScore;
     private readonly LightPollutionService _lightPollutionService = new();
 
     // ── Imaging setups ───────────────────────────────────────────────────────
@@ -76,7 +77,8 @@ public partial class SettingsViewModel : ViewModelBase
     {
         _settingsService = settingsService;
         _settings = settingsService.Load();
-        StepMinutes = (decimal)_settings.VisibilityStepMinutes;
+        StepMinutes           = (decimal)_settings.VisibilityStepMinutes;
+        ApplySkyQualityToScore = _settings.ApplySkyQualityToScore;
         RebuildRows();
         RebuildSetupRows();
         LoadWeatherThresholds();
@@ -336,6 +338,14 @@ public partial class SettingsViewModel : ViewModelBase
         {
             BortleFetchMessage = "Fetch failed — check your connection.";
         }
+    }
+
+    [RelayCommand]
+    private void SaveSkySettings()
+    {
+        _settings.ApplySkyQualityToScore = ApplySkyQualityToScore;
+        _settingsService.Save(_settings);
+        SettingsSaved?.Invoke();
     }
 
     [RelayCommand]

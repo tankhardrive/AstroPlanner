@@ -146,6 +146,16 @@
                                        Foreground="{DynamicResource SystemAccentColorLight2}"
                                        IsVisible="{Binding BortleFetchMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                                        TextWrapping="Wrap"/>
+
+                            <Separator Margin="0,4"/>
+
+                            <CheckBox IsChecked="{Binding ApplySkyQualityToScore}"
+                                      Content="Factor sky quality into Score column"
+                                      ToolTip.Tip="When enabled, each object's Score is multiplied by its sky-quality factor. When disabled, the Score reflects only visibility and geometry — sky quality appears in the Sky column only."/>
+                            <Button Content="Save Sky Settings"
+                                    Command="{Binding SaveSkySettingsCommand}"
+                                    HorizontalAlignment="Left"
+                                    Padding="10,4"/>
                         </StackPanel>
                     </Border>
 

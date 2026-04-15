@@ -97,6 +97,15 @@ public partial class PlannerViewModel : ViewModelBase
         ApplyFilterAndSort();
     }
 
+    /// <summary>
+    /// Pushes the "apply sky factor to score" toggle to all rows and re-sorts.
+    /// </summary>
+    public void SetApplySkyToScore(bool apply)
+    {
+        foreach (var row in _allRows) row.ApplySkyToScore = apply;
+        ApplyFilterAndSort();
+    }
+
     // Called by MainWindowViewModel after loading
     public void Initialize()
     {

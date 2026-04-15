@@ -56,9 +56,16 @@ public static class SkyQuality
         // Primary path: surface brightness contrast
         if (dso.SurfaceBrightness is double objectSB && objectSB > 0 && objectSB < 99)
         {
-            // contrast > ~2 → very detectable; contrast < 0.1 → essentially impossible
-            double contrast = Math.Pow(10, (skyBrightness - objectSB) / 2.5);
-            return Math.Clamp((contrast - 0.1) / 1.9, 0, 1);
+            // contrast = how many times brighter the object's surface is vs the sky background.
+            // Use log scale so the full range maps smoothly to [0,1]:
+            //   contrast = 10   (object 2.5 mag/□″ brighter than sky) → 1.0  Excellent
+            //   contrast =  1   (object matches sky brightness)        → 0.78 Good
+            //   contrast = 0.1  (sky 2.5× brighter per □″)            → 0.55 Fair
+            //   contrast = 0.01 (sky 25× brighter per □″)             → 0.33 Poor
+            //   contrast ≈0.003 (sky ~80× brighter per □″)            → 0.20 Poor/Marginal
+            double contrast    = Math.Pow(10, (skyBrightness - objectSB) / 2.5);
+            double logContrast = Math.Log10(Math.Max(contrast, 0.0001));
+            return Math.Clamp((logContrast + 3.47) / 4.47, 0, 1);
         }
 
         // Fallback: type-based sensitivity

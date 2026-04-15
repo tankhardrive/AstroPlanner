@@ -114,6 +114,7 @@ public partial class MainWindowViewModel : ViewModelBase
         OnPropertyChanged(nameof(BortleColor));
         PushSetups();
         Planner.SetBortleClass(_settings.GetActiveLocation().BortleClass);
+        Planner.SetApplySkyToScore(_settings.ApplySkyQualityToScore);
         _ = RefreshWeatherAsync();
     }
 
@@ -144,6 +145,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         await Planner.CalculateCommand.ExecuteAsync((date, site, horizon, step));
         Planner.SetBortleClass(loc.BortleClass);
+        Planner.SetApplySkyToScore(_settings.ApplySkyQualityToScore);
         UpdateMoonInfo();
 
         // Auto-fetch Bortle class if not yet stored for this location
@@ -161,6 +163,7 @@ public partial class MainWindowViewModel : ViewModelBase
         loc.BortleClass = bortle;
         _settingsService.Save(_settings);
         Planner.SetBortleClass(bortle);
+        Planner.SetApplySkyToScore(_settings.ApplySkyQualityToScore);
 
         OnPropertyChanged(nameof(BortleDisplay));
         OnPropertyChanged(nameof(BortleToolTip));

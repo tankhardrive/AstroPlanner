@@ -12,6 +12,12 @@ public class AppSettings
 
     public WeatherThresholds WeatherThresholds { get; set; } = new();
 
+    /// <summary>
+    /// When true, the sky-quality factor (from Bortle class) is multiplied into the Score column.
+    /// When false, sky quality is shown only in the separate Sky column.
+    /// </summary>
+    public bool ApplySkyQualityToScore { get; set; } = false;
+
     // ── Legacy fields — kept only for one-time migration from old settings files ──────────────
     public ObservationSite? Site { get; set; }
     public List<HorizonProfile>? HorizonProfiles { get; set; }

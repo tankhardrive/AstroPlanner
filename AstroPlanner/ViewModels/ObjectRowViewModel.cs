@@ -39,6 +39,19 @@ public partial class ObjectRowViewModel : ObservableObject
         }
     }
 
+    private bool _applySkyToScore;
+    public bool ApplySkyToScore
+    {
+        get => _applySkyToScore;
+        set
+        {
+            _applySkyToScore = value;
+            OnPropertyChanged(nameof(Score));
+            OnPropertyChanged(nameof(ScoreDisplay));
+            OnPropertyChanged(nameof(SortScore));
+        }
+    }
+
     private TimeZoneInfo _timeZone = TimeZoneInfo.Local;
     public TimeZoneInfo TimeZone
     {
@@ -211,8 +224,8 @@ public partial class ObjectRowViewModel : ObservableObject
                 : peak < 20 ? (peak - 10) / 10.0 * 3
                 : Math.Min((peak - 20) / 70.0, 1.0) * 7 + 3;
 
-            double rawScore = fracScore + avgScore + moonScore + brightScore + sizeScore + peakScore;
-            return Math.Round(rawScore * SkyFactor, 1);
+            double raw = fracScore + avgScore + moonScore + brightScore + sizeScore + peakScore;
+            return Math.Round(_applySkyToScore ? raw * SkyFactor : raw, 1);
         }
     }
 
