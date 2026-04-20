@@ -23,6 +23,7 @@ public class LocationRowViewModel(ObservationLocation location, bool isActive)
 public partial class SettingsViewModel : ViewModelBase
 {
     private readonly SettingsService _settingsService;
+    private readonly CometService _cometService;
     private AppSettings _settings;
 
     // ── Location list ────────────────────────────────────────────────────────
@@ -73,9 +74,10 @@ public partial class SettingsViewModel : ViewModelBase
 
     public event Action? SettingsSaved;
 
-    public SettingsViewModel(SettingsService settingsService)
+    public SettingsViewModel(SettingsService settingsService, CometService cometService)
     {
         _settingsService = settingsService;
+        _cometService = cometService;
         _settings = settingsService.Load();
         StepMinutes           = (decimal)_settings.VisibilityStepMinutes;
         ApplySkyQualityToScore = _settings.ApplySkyQualityToScore;
@@ -375,6 +377,7 @@ public partial class SettingsViewModel : ViewModelBase
         "AstroPlanner", "comets.json");
 
     [ObservableProperty] private string _cometCacheMessage = "";
+    [ObservableProperty] private bool _isRefreshingComets;
 
     [RelayCommand]
     private void ClearCometCache()
@@ -387,6 +390,24 @@ public partial class SettingsViewModel : ViewModelBase
         else
         {
             CometCacheMessage = "No cache found.";
+        }
+    }
+
+    [RelayCommand]
+    private async Task RefreshCometsAsync()
+    {
+        IsRefreshingComets = true;
+        CometCacheMessage = "Fetching from MPC…";
+        try
+        {
+            var error = await _cometService.RefreshAsync();
+            CometCacheMessage = error != null
+                ? $"Refresh failed: {error}"
+                : $"Updated — {_cometService.GetAll().Count} comets loaded.";
+        }
+        finally
+        {
+            IsRefreshingComets = false;
         }
     }
 }

@@ -8,75 +8,78 @@
 
         <!-- ── Filter bar ── -->
         <Border DockPanel.Dock="Top"
-                Padding="8,6"
+                Padding="10,8"
                 BorderThickness="0,0,0,1"
                 BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}">
-            <WrapPanel Orientation="Horizontal" ItemSpacing="8">
+            <StackPanel Orientation="Vertical" Spacing="6">
 
-                <!-- Search box -->
-                <TextBox Width="160" PlaceholderText="Search name, M31, NGC…"
-                         Text="{Binding SearchText}"
-                         VerticalAlignment="Center"/>
+                <!-- Row 1: Search · Catalog · Type -->
+                <StackPanel Orientation="Horizontal" Spacing="14">
 
-                <!-- Type toggles -->
-                <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-                    <CheckBox Content="Galaxies"  IsChecked="{Binding ShowGalaxies}"/>
-                    <CheckBox Content="Clusters"  IsChecked="{Binding ShowClusters}"/>
-                    <CheckBox Content="Nebulae"   IsChecked="{Binding ShowNebulae}"/>
-                    <CheckBox Content="Planets"   IsChecked="{Binding ShowPlanets}"/>
-                    <CheckBox Content="Stars"     IsChecked="{Binding ShowStars}"/>
-                    <CheckBox Content="Comets"    IsChecked="{Binding ShowComets}"/>
-                    <Button Content="↺"
-                            Command="{Binding RefreshCometsCommand}"
-                            IsEnabled="{Binding !IsRefreshingComets}"
-                            ToolTip.Tip="Refresh comet data from MPC"
-                            Padding="6,2"
+                    <TextBox Width="190"
+                             PlaceholderText="Search name, M31, NGC…"
+                             Text="{Binding SearchText}"
+                             VerticalAlignment="Center"/>
+
+                    <!-- Catalog -->
+                    <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                        <TextBlock Text="Catalog:" FontSize="11" Opacity="0.55" VerticalAlignment="Center" Margin="0,0,2,0"/>
+                        <ToggleButton Content="Messier"  IsChecked="{Binding ShowMessier}"  Padding="8,3" FontSize="11"/>
+                        <ToggleButton Content="Caldwell" IsChecked="{Binding ShowCaldwell}" Padding="8,3" FontSize="11"/>
+                        <ToggleButton Content="NGC"      IsChecked="{Binding ShowNgc}"      Padding="8,3" FontSize="11"/>
+                        <ToggleButton Content="IC"       IsChecked="{Binding ShowIc}"       Padding="8,3" FontSize="11"/>
+                    </StackPanel>
+
+                    <!-- Type -->
+                    <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                        <TextBlock Text="Type:" FontSize="11" Opacity="0.55" VerticalAlignment="Center" Margin="0,0,2,0"/>
+                        <ToggleButton Content="Galaxies" IsChecked="{Binding ShowGalaxies}" Padding="8,3" FontSize="11"/>
+                        <ToggleButton Content="Clusters" IsChecked="{Binding ShowClusters}" Padding="8,3" FontSize="11"/>
+                        <ToggleButton Content="Nebulae"  IsChecked="{Binding ShowNebulae}"  Padding="8,3" FontSize="11"/>
+                        <ToggleButton Content="Planets"  IsChecked="{Binding ShowPlanets}"  Padding="8,3" FontSize="11"/>
+                        <ToggleButton Content="Stars"    IsChecked="{Binding ShowStars}"    Padding="8,3" FontSize="11"/>
+                        <ToggleButton Content="Comets"   IsChecked="{Binding ShowComets}"   Padding="8,3" FontSize="11"/>
+                    </StackPanel>
+
+                </StackPanel>
+
+                <!-- Row 2: Constellation · Mag · Min vis · Visible only · Clear -->
+                <StackPanel Orientation="Horizontal" Spacing="14">
+
+                    <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                        <TextBlock Text="Constellation:" FontSize="11" Opacity="0.55" VerticalAlignment="Center"/>
+                        <ComboBox ItemsSource="{Binding Constellations}"
+                                  SelectedItem="{Binding SelectedConstellation}"
+                                  Width="110" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                        <TextBlock Text="Mag ≤" FontSize="11" Opacity="0.55" VerticalAlignment="Center"/>
+                        <NumericUpDown Value="{Binding MaxMagnitude}"
+                                       Minimum="1" Maximum="20" Increment="0.5"
+                                       FormatString="F1" Width="115"/>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                        <TextBlock Text="Min vis." FontSize="11" Opacity="0.55" VerticalAlignment="Center"/>
+                        <NumericUpDown Value="{Binding MinDurationHours}"
+                                       Minimum="0" Maximum="12" Increment="0.5"
+                                       FormatString="F1" Width="115"/>
+                        <TextBlock Text="h" FontSize="11" Opacity="0.55" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <CheckBox Content="Visible only"
+                              IsChecked="{Binding OnlyVisible}"
+                              VerticalAlignment="Center"/>
+
+                    <Button Content="✕ Clear"
+                            Command="{Binding ClearFiltersCommand}"
+                            IsVisible="{Binding HasActiveFilters}"
                             VerticalAlignment="Center"/>
+
                 </StackPanel>
 
-                <!-- Catalog filter -->
-                <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-                    <TextBlock Text="Cat:" VerticalAlignment="Center" Opacity="0.7"/>
-                    <CheckBox Content="M"        IsChecked="{Binding ShowMessier}"  ToolTip.Tip="Messier"/>
-                    <CheckBox Content="C"        IsChecked="{Binding ShowCaldwell}" ToolTip.Tip="Caldwell"/>
-                    <CheckBox Content="NGC"      IsChecked="{Binding ShowNgc}"/>
-                    <CheckBox Content="IC"       IsChecked="{Binding ShowIc}"/>
-                </StackPanel>
-
-                <!-- Constellation filter -->
-                <ComboBox ItemsSource="{Binding Constellations}"
-                          SelectedItem="{Binding SelectedConstellation}"
-                          Width="80"
-                          VerticalAlignment="Center"/>
-
-                <!-- Max magnitude -->
-                <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-                    <TextBlock Text="Mag ≤" VerticalAlignment="Center"/>
-                    <NumericUpDown Value="{Binding MaxMagnitude}"
-                                   Minimum="1" Maximum="20" Increment="0.5"
-                                   FormatString="F1"
-                                   Width="115"/>
-                </StackPanel>
-
-                <!-- Min duration -->
-                <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-                    <TextBlock Text="Min vis." VerticalAlignment="Center"/>
-                    <NumericUpDown Value="{Binding MinDurationHours}"
-                                   Minimum="0" Maximum="12" Increment="0.5"
-                                   FormatString="F1"
-                                   Width="115"/>
-                    <TextBlock Text="h" VerticalAlignment="Center"/>
-                </StackPanel>
-
-                <!-- Only visible toggle -->
-                <CheckBox Content="Visible only" IsChecked="{Binding OnlyVisible}" VerticalAlignment="Center"/>
-
-                <!-- Clear filters -->
-                <Button Content="✕ Clear"
-                        Command="{Binding ClearFiltersCommand}"
-                        IsVisible="{Binding HasActiveFilters}"
-                        VerticalAlignment="Center"/>
-            </WrapPanel>
+            </StackPanel>
         </Border>
 
         <!-- ── Status bar ── -->
@@ -102,7 +105,7 @@
             <DataGrid.Columns>
 
                 <DataGridTextColumn Binding="{Binding PrimaryName}"
-                                    Width="200" SortMemberPath="PrimaryName">
+                                    Width="225" SortMemberPath="PrimaryName">
                     <DataGridTextColumn.Header>
                         <TextBlock Text="Name"
                                    ToolTip.Tip="Primary name — common name if available, then Messier number, then catalog ID"/>
@@ -110,7 +113,7 @@
                 </DataGridTextColumn>
 
                 <DataGridTextColumn Binding="{Binding CatalogIds}"
-                                    Width="130" SortMemberPath="CatalogIds">
+                                    Width="155" SortMemberPath="CatalogIds">
                     <DataGridTextColumn.Header>
                         <TextBlock Text="IDs"
                                    ToolTip.Tip="All catalog identifiers for this object (Messier, NGC, IC, Caldwell, etc.)"/>
@@ -153,7 +156,7 @@
                                     Width="90" SortMemberPath="SortScore">
                     <DataGridTextColumn.Header>
                         <TextBlock Text="Score"
-                                   ToolTip.Tip="Observability score out of 100 for tonight.&#x0a;&#x0a;Weighted sum of:&#x0a;  Visibility fraction   25 pts&#x0a;  Avg altitude          20 pts&#x0a;  Moon separation       20 pts&#x0a;  Surface brightness    15 pts&#x0a;  Angular size          10 pts&#x0a;  Peak altitude         10 pts"/>
+                                   ToolTip.Tip="Observability score out of 100 for tonight.&#x0a;&#x0a;Weighted sum of:&#x0a;  Visibility fraction   15 pts&#x0a;  Absolute duration     10 pts  (full at ≥5 h)&#x0a;  Avg altitude          20 pts&#x0a;  Moon separation       20 pts&#x0a;  Brightness            15 pts&#x0a;  Angular size          10 pts&#x0a;  Peak altitude         10 pts"/>
                     </DataGridTextColumn.Header>
                 </DataGridTextColumn>
 

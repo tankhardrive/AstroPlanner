@@ -150,6 +150,78 @@
 
             <Separator Margin="8,0"/>
 
+            <!-- Score breakdown -->
+            <StackPanel Margin="12,8,12,10" Spacing="5"
+                        IsVisible="{Binding HasScore}">
+
+                <!-- Header row: label + total -->
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Grid.Column="0" Text="Score Breakdown" FontSize="11" Opacity="0.6"/>
+                    <TextBlock Grid.Column="1" Text="{Binding BreakTotal}"
+                               FontSize="12" FontWeight="SemiBold"/>
+                </Grid>
+
+                <!-- Component rows: label | bar | earned/max -->
+                <Grid ColumnDefinitions="120,*,72" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="5">
+
+                    <!-- Vis. fraction -->
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Vis. fraction" FontSize="11" Opacity="0.65" VerticalAlignment="Center"
+                               ToolTip.Tip="What fraction of tonight's astronomical darkness the object spends above your horizon.&#x0a;Full 15 pts when visible all night."/>
+                    <ProgressBar Grid.Row="0" Grid.Column="1" Value="{Binding BreakFracFill}" Minimum="0" Maximum="1" Height="5" Margin="26,0,50,0" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding BreakFrac}" FontSize="11" FontFamily="monospace" TextAlignment="Right" VerticalAlignment="Center"/>
+
+                    <!-- Duration -->
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Duration" FontSize="11" Opacity="0.65" VerticalAlignment="Center"
+                               ToolTip.Tip="Absolute hours visible during darkness. Rewards targets up all night over ones with short windows.&#x0a;Full 10 pts at 5+ hours."/>
+                    <ProgressBar Grid.Row="1" Grid.Column="1" Value="{Binding BreakDurFill}" Minimum="0" Maximum="1" Height="5" Margin="26,0,50,0" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding BreakDur}" FontSize="11" FontFamily="monospace" TextAlignment="Right" VerticalAlignment="Center"/>
+
+                    <!-- Avg altitude -->
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Avg altitude" FontSize="11" Opacity="0.65" VerticalAlignment="Center"
+                               ToolTip.Tip="Average altitude while visible. Higher means less atmosphere to image through.&#x0a;Full 20 pts at 45°+ average."/>
+                    <ProgressBar Grid.Row="2" Grid.Column="1" Value="{Binding BreakAltFill}" Minimum="0" Maximum="1" Height="5" Margin="26,0,50,0" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding BreakAlt}" FontSize="11" FontFamily="monospace" TextAlignment="Right" VerticalAlignment="Center"/>
+
+                    <!-- Moon sep -->
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Moon sep." FontSize="11" Opacity="0.65" VerticalAlignment="Center"
+                               ToolTip.Tip="Angular distance from the Moon at the object's peak altitude. Larger separation means less sky glow washing out faint detail.&#x0a;Full 20 pts at 90°+."/>
+                    <ProgressBar Grid.Row="3" Grid.Column="1" Value="{Binding BreakMoonFill}" Minimum="0" Maximum="1" Height="5" Margin="26,0,50,0" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Row="3" Grid.Column="2" Text="{Binding BreakMoon}" FontSize="11" FontFamily="monospace" TextAlignment="Right" VerticalAlignment="Center"/>
+
+                    <!-- Brightness -->
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="Brightness" FontSize="11" Opacity="0.65" VerticalAlignment="Center"
+                               ToolTip.Tip="Based on integrated magnitude — how much total light the object produces. Brighter targets are easier to expose and require less integration time.&#x0a;Full 15 pts at mag 0, zero at mag 15."/>
+                    <ProgressBar Grid.Row="4" Grid.Column="1" Value="{Binding BreakBrightFill}" Minimum="0" Maximum="1" Height="5" Margin="26,0,50,0" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Row="4" Grid.Column="2" Text="{Binding BreakBright}" FontSize="11" FontFamily="monospace" TextAlignment="Right" VerticalAlignment="Center"/>
+
+                    <!-- Angular size -->
+                    <TextBlock Grid.Row="5" Grid.Column="0" Text="Angular size" FontSize="11" Opacity="0.65" VerticalAlignment="Center"
+                               ToolTip.Tip="How large the object appears on the sky. Larger objects fill the frame and show more resolvable detail.&#x0a;Full 10 pts at 30'+, scored on a log scale."/>
+                    <ProgressBar Grid.Row="5" Grid.Column="1" Value="{Binding BreakSizeFill}" Minimum="0" Maximum="1" Height="5" Margin="26,0,50,0" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Row="5" Grid.Column="2" Text="{Binding BreakSize}" FontSize="11" FontFamily="monospace" TextAlignment="Right" VerticalAlignment="Center"/>
+
+                    <!-- Peak altitude -->
+                    <TextBlock Grid.Row="6" Grid.Column="0" Text="Peak alt." FontSize="11" Opacity="0.65" VerticalAlignment="Center"
+                               ToolTip.Tip="Highest altitude the object reaches tonight. Objects peaking below 20° suffer heavy atmospheric distortion and extinction.&#x0a;Full 10 pts at 90°."/>
+                    <ProgressBar Grid.Row="6" Grid.Column="1" Value="{Binding BreakPeakFill}" Minimum="0" Maximum="1" Height="5" Margin="26,0,50,0" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Row="6" Grid.Column="2" Text="{Binding BreakPeak}" FontSize="11" FontFamily="monospace" TextAlignment="Right" VerticalAlignment="Center"/>
+
+                    <!-- Sky penalty — no bar, just label + deduction text -->
+                    <TextBlock Grid.Row="7" Grid.Column="0" Text="Sky penalty" FontSize="11" Opacity="0.65" VerticalAlignment="Center"
+                               IsVisible="{Binding BreakHasSky}"
+                               ToolTip.Tip="Deduction for light pollution. Based on how much your sky background (Bortle class) washes out this object's surface brightness.&#x0a;Maximum −20 pts. Enabled in Settings › Sky Quality."/>
+                    <TextBlock Grid.Row="7" Grid.Column="2" Text="{Binding BreakSky}" FontSize="11" FontFamily="monospace" TextAlignment="Right" VerticalAlignment="Center"
+                               Opacity="0.7" IsVisible="{Binding BreakHasSky}"/>
+
+                    <!-- Separator + total -->
+                    <Separator Grid.Row="8" Grid.ColumnSpan="3" Margin="0,2"/>
+
+                </Grid>
+
+            </StackPanel>
+
+            <Separator Margin="8,0"/>
+
             <!-- Imaging setups breakdown -->
             <StackPanel Margin="12,8,12,12" Spacing="6">
                 <TextBlock Text="Imaging Setups" FontSize="11" Opacity="0.6"/>

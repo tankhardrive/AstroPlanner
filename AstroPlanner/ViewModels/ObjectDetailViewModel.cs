@@ -123,6 +123,40 @@ public partial class ObjectDetailViewModel : ViewModelBase
 
     public string DetailMoonSep => Source?.MoonSepDisplay ?? "—";
 
+    // ── Score breakdown ───────────────────────────────────────────────────────
+
+    public bool HasScore => Source?.Breakdown != null;
+
+    public string BreakFrac     => ScoreLine(Source?.Breakdown?.FracEarned,   15);
+    public string BreakDur      => ScoreLine(Source?.Breakdown?.DurEarned,    10);
+    public string BreakAlt      => ScoreLine(Source?.Breakdown?.AltEarned,    20);
+    public string BreakMoon     => ScoreLine(Source?.Breakdown?.MoonEarned,   20);
+    public string BreakBright   => ScoreLine(Source?.Breakdown?.BrightEarned, 15);
+    public string BreakSize     => ScoreLine(Source?.Breakdown?.SizeEarned,   10);
+    public string BreakPeak     => ScoreLine(Source?.Breakdown?.PeakEarned,   10);
+
+    public double BreakFracFill   => FillOf(Source?.Breakdown?.FracEarned,   15);
+    public double BreakDurFill    => FillOf(Source?.Breakdown?.DurEarned,    10);
+    public double BreakAltFill    => FillOf(Source?.Breakdown?.AltEarned,    20);
+    public double BreakMoonFill   => FillOf(Source?.Breakdown?.MoonEarned,   20);
+    public double BreakBrightFill => FillOf(Source?.Breakdown?.BrightEarned, 15);
+    public double BreakSizeFill   => FillOf(Source?.Breakdown?.SizeEarned,   10);
+    public double BreakPeakFill   => FillOf(Source?.Breakdown?.PeakEarned,   10);
+
+    public bool   BreakHasSky  => Source?.Breakdown?.SkyApplied == true;
+    public string BreakSky     => Source?.Breakdown is { SkyApplied: true } b
+        ? $"−{Math.Abs(b.SkyPenalty):F0} pts" : "";
+    public double BreakSkyFill => Source?.Breakdown is { SkyApplied: true } bs
+        ? Math.Clamp(1.0 + bs.SkyPenalty / 20.0, 0, 1) : 1.0;
+
+    public string BreakTotal   => Source?.Breakdown is ScoreBreakdown bt
+        ? $"{bt.Total:F0} / 100" : "— / 100";
+
+    private static string ScoreLine(double? earned, double max) =>
+        earned.HasValue ? $"{(int)Math.Round(earned.Value)} / {(int)max}" : $"— / {(int)max}";
+    private static double FillOf(double? earned, double max) =>
+        earned.HasValue ? Math.Clamp(earned.Value / max, 0, 1) : 0;
+
     public string DetailPerihelion
     {
         get
@@ -267,6 +301,25 @@ public partial class ObjectDetailViewModel : ViewModelBase
         OnPropertyChanged(nameof(DetailPerihelion));
         OnPropertyChanged(nameof(ObservingTimeZone));
         OnPropertyChanged(nameof(SetupResults));
+        OnPropertyChanged(nameof(HasScore));
+        OnPropertyChanged(nameof(BreakFrac));
+        OnPropertyChanged(nameof(BreakDur));
+        OnPropertyChanged(nameof(BreakAlt));
+        OnPropertyChanged(nameof(BreakMoon));
+        OnPropertyChanged(nameof(BreakBright));
+        OnPropertyChanged(nameof(BreakSize));
+        OnPropertyChanged(nameof(BreakPeak));
+        OnPropertyChanged(nameof(BreakFracFill));
+        OnPropertyChanged(nameof(BreakDurFill));
+        OnPropertyChanged(nameof(BreakAltFill));
+        OnPropertyChanged(nameof(BreakMoonFill));
+        OnPropertyChanged(nameof(BreakBrightFill));
+        OnPropertyChanged(nameof(BreakSizeFill));
+        OnPropertyChanged(nameof(BreakPeakFill));
+        OnPropertyChanged(nameof(BreakHasSky));
+        OnPropertyChanged(nameof(BreakSky));
+        OnPropertyChanged(nameof(BreakSkyFill));
+        OnPropertyChanged(nameof(BreakTotal));
 
         _imageCts?.Cancel();
         _imagesBySource.Clear();

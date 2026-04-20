@@ -6,6 +6,7 @@
         <entry key="AstroPlanner/App.axaml" value="AstroPlanner/AstroPlanner.csproj" />
         <entry key="AstroPlanner/Views/FovPreviewWindow.axaml" value="AstroPlanner/AstroPlanner.csproj" />
         <entry key="AstroPlanner/Views/MainWindow.axaml" value="AstroPlanner/AstroPlanner.csproj" />
+        <entry key="AstroPlanner/Views/ObjectDetailView.axaml" value="AstroPlanner/AstroPlanner.csproj" />
         <entry key="AstroPlanner/Views/PlannerView.axaml" value="AstroPlanner/AstroPlanner.csproj" />
       </map>
     </option>

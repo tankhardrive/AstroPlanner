@@ -5,6 +5,19 @@ using Avalonia.Media;
 
 namespace AstroPlanner.ViewModels;
 
+public record ScoreBreakdown(
+    double FracEarned,    // out of 15
+    double DurEarned,     // out of 10
+    double AltEarned,     // out of 20
+    double MoonEarned,    // out of 20
+    double BrightEarned,  // out of 15
+    double SizeEarned,    // out of 10
+    double PeakEarned,    // out of 10
+    double SkyPenalty,    // ≤ 0; only non-zero when sky is applied
+    bool   SkyApplied,
+    double Total          // final score 0–100
+);
+
 /// <summary>
 /// Wraps a celestial object (DSO or solar system) plus its computed visibility
 /// for display in the planner DataGrid.
@@ -188,54 +201,51 @@ public partial class ObjectRowViewModel : ObservableObject
 
     // ── Observability score (0–100) ──────────────────────────────────────────
 
-    public double Score
+    public ScoreBreakdown? Breakdown => Visibility.IsVisible ? ComputeBreakdown() : null;
+
+    public double Score => Breakdown?.Total ?? 0;
+
+    private ScoreBreakdown ComputeBreakdown()
     {
-        get
-        {
-            if (!Visibility.IsVisible) return 0;
+        // 1a. Visibility fraction (15pts)
+        double frac = Visibility.VisibilityFraction * 15;
 
-            // 1. Visibility fraction (25pts): how much of the dark window it's above horizon
-            double fracScore = Visibility.VisibilityFraction * 25;
+        // 1b. Absolute duration (10pts): full at ≥5 h
+        double dur = Math.Clamp(Visibility.Duration.TotalHours / 5.0, 0, 1) * 10;
 
-            // 2. Average altitude (20pts): full score at ≥45° average
-            double avgScore = Math.Min(Visibility.AverageAltitudeDegrees / 45.0, 1.0) * 20;
+        // 2. Average altitude (20pts): full at ≥45° avg
+        double alt = Math.Min(Visibility.AverageAltitudeDegrees / 45.0, 1.0) * 20;
 
-            // 3. Moon separation (20pts): full score at ≥90°
-            double moonScore = Math.Min(Visibility.MoonSeparationDegrees / 90.0, 1.0) * 20;
+        // 3. Moon separation (20pts): full at ≥90°
+        double moon = Math.Min(Visibility.MoonSeparationDegrees / 90.0, 1.0) * 20;
 
-            // 4. Brightness (15pts): prefer surface brightness for extended objects,
-            //    fall back to integrated magnitude for stars/planets/clusters
-            double brightScore;
-            if (DsoSource?.SurfaceBrightness is double sb && sb > 0 && sb < 99)
-            {
-                // Surface brightness in mag/□″: ~10 (very bright) → ~25 (very faint)
-                brightScore = Math.Clamp((25.0 - sb) / 15.0, 0, 1) * 15;
-            }
-            else if (Magnitude is double mag)
-            {
-                // Integrated magnitude: 0 → 15pts, 15 → 0pts
-                brightScore = Math.Clamp((15.0 - mag) / 15.0, 0, 1) * 15;
-            }
-            else
-            {
-                brightScore = 7.5; // neutral when unknown
-            }
+        // 4. Brightness (15pts): integrated magnitude — catalog mean SB excluded here
+        //    because it averages faint outer regions and underestimates bright galaxy cores.
+        double bright = Magnitude is double mag
+            ? Math.Clamp((15.0 - mag) / 15.0, 0, 1) * 15
+            : 7.5;
 
-            // 5. Size (10pts): log scale — 1′ → ~0pts, 5′ → ~5pts, ≥30′ → 10pts
-            double sizeScore = 0;
-            double? arcmin = DsoSource?.MajorAxisArcmin ?? SolarSystemSource?.AngularDiameterArcmin;
-            if (arcmin is double s && s > 0)
-                sizeScore = Math.Clamp(Math.Log10(Math.Max(s, 1)) / Math.Log10(30), 0, 1) * 10;
+        // 5. Size (10pts): log scale — 1′ → ~0pts, 5′ → ~5pts, ≥30′ → 10pts
+        double? arcmin = DsoSource?.MajorAxisArcmin ?? SolarSystemSource?.AngularDiameterArcmin;
+        double size = arcmin is double s && s > 0
+            ? Math.Clamp(Math.Log10(Math.Max(s, 1)) / Math.Log10(30), 0, 1) * 10
+            : 0;
 
-            // 6. Peak altitude (10pts): steep penalty below 20°
-            double peak = Visibility.PeakAltitudeDegrees;
-            double peakScore = peak < 10 ? 0
-                : peak < 20 ? (peak - 10) / 10.0 * 3
-                : Math.Min((peak - 20) / 70.0, 1.0) * 7 + 3;
+        // 6. Peak altitude (10pts): steep penalty below 20°
+        double peakDeg = Visibility.PeakAltitudeDegrees;
+        double peak = peakDeg < 10 ? 0
+            : peakDeg < 20 ? (peakDeg - 10) / 10.0 * 3
+            : Math.Min((peakDeg - 20) / 70.0, 1.0) * 7 + 3;
 
-            double raw = fracScore + avgScore + moonScore + brightScore + sizeScore + peakScore;
-            return Math.Round(_applySkyToScore ? raw * SkyFactor : raw, 1);
-        }
+        double raw = frac + dur + alt + moon + bright + size + peak;
+        double skyPenalty = _applySkyToScore ? -((1.0 - SkyFactor) * 20.0) : 0;
+        double total = Math.Round(Math.Max(raw + skyPenalty, 0), 1);
+
+        return new ScoreBreakdown(
+            Math.Round(frac,   1), Math.Round(dur,   1), Math.Round(alt,  1),
+            Math.Round(moon,   1), Math.Round(bright, 1), Math.Round(size, 1),
+            Math.Round(peak,   1), Math.Round(skyPenalty, 1), _applySkyToScore,
+            total);
     }
 
     public string ScoreDisplay => Visibility.IsComputed

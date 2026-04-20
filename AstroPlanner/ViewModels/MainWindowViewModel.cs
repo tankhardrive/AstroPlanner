@@ -73,7 +73,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         Planner      = new PlannerViewModel(catalog, visibility, _cometService);
         Detail       = new ObjectDetailViewModel(images, visibility);
-        Settings     = new SettingsViewModel(_settingsService);
+        Settings     = new SettingsViewModel(_settingsService, _cometService);
         WeatherStrip = new WeatherStripViewModel(_weatherService);
 
         Settings.SettingsSaved += OnSettingsSaved;

@@ -73,10 +73,8 @@ public partial class PlannerViewModel : ViewModelBase
     [ObservableProperty] private IReadOnlyList<string> _constellations = ["All"];
 
     // ── Sort ──────────────────────────────────────────────────────────────────
-    [ObservableProperty] private string _sortColumn = "Duration";
+    [ObservableProperty] private string _sortColumn = "Score";
     [ObservableProperty] private bool _sortAscending = false;
-
-    [ObservableProperty] private bool _isRefreshingComets;
 
     public bool HasActiveFilters =>
         !ShowGalaxies || !ShowClusters || !ShowNebulae || !ShowPlanets || !ShowComets ||
@@ -91,6 +89,7 @@ public partial class PlannerViewModel : ViewModelBase
         _catalog = catalog;
         _visibility = visibility;
         _comets = comets;
+        _comets.CometDataRefreshed += RebuildCometRows;
     }
 
     /// <summary>
@@ -134,30 +133,6 @@ public partial class PlannerViewModel : ViewModelBase
         int cometCount = cometList.Count;
         string cometInfo = cometCount > 0 ? $", {cometCount} comets" : "";
         StatusText = $"{dsObjects.Count:N0} objects loaded{cometInfo}. Select a date and press Calculate.";
-    }
-
-    [RelayCommand]
-    private async Task RefreshCometsAsync()
-    {
-        IsRefreshingComets = true;
-        StatusText = "Refreshing comet data from MPC…";
-        try
-        {
-            var error = await _comets.RefreshAsync();
-            if (error != null)
-            {
-                StatusText = $"Failed to refresh comets: {error}";
-            }
-            else
-            {
-                RebuildCometRows();
-                StatusText = $"Comets updated: {_comets.GetAll().Count} currently observable.";
-            }
-        }
-        finally
-        {
-            IsRefreshingComets = false;
-        }
     }
 
     private void RebuildCometRows()

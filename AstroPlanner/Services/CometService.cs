@@ -15,6 +15,8 @@ public class CometService
 
     private List<CometObject> _comets = [];
 
+    public event Action? CometDataRefreshed;
+
     public IReadOnlyList<CometObject> GetAll() => _comets;
 
     public async Task LoadAsync()
@@ -51,6 +53,7 @@ public class CometService
                 _comets = comets;
                 Directory.CreateDirectory(Path.GetDirectoryName(CacheFile)!);
                 await File.WriteAllTextAsync(CacheFile, JsonSerializer.Serialize(_comets));
+                CometDataRefreshed?.Invoke();
             }
             return null;
         }

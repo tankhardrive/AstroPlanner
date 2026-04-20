@@ -65,7 +65,18 @@ public static class SkyQuality
             //   contrast ≈0.003 (sky ~80× brighter per □″)            → 0.20 Poor/Marginal
             double contrast    = Math.Pow(10, (skyBrightness - objectSB) / 2.5);
             double logContrast = Math.Log10(Math.Max(contrast, 0.0001));
-            return Math.Clamp((logContrast + 3.47) / 4.47, 0, 1);
+            double sbFactor    = Math.Clamp((logContrast + 3.47) / 4.47, 0, 1);
+
+            // Catalog mean SB for large galaxies is averaged across the whole ellipse,
+            // including faint outer regions — it badly underestimates bright inner regions.
+            // A floor based on integrated magnitude ensures bright objects (M31, M101, etc.)
+            // are never labelled worse than their total flux warrants for imaging.
+            double? mag     = dso.MagnitudeV ?? dso.MagnitudeB;
+            double magFloor = mag is double m && m < 13.0
+                ? Math.Clamp((13.0 - m) / 13.0, 0, 1) * 0.60
+                : 0.0;
+
+            return Math.Max(sbFactor, magFloor);
         }
 
         // Fallback: type-based sensitivity
