@@ -102,7 +102,7 @@
             <DataGrid.Columns>
 
                 <DataGridTextColumn Binding="{Binding PrimaryName}"
-                                    Width="150" SortMemberPath="PrimaryName">
+                                    Width="200" SortMemberPath="PrimaryName">
                     <DataGridTextColumn.Header>
                         <TextBlock Text="Name"
                                    ToolTip.Tip="Primary name — common name if available, then Messier number, then catalog ID"/>

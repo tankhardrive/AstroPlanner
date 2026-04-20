@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "UKEwol8ZfJQ=",
+  "dgSpecHash": "06Yt5NpF8oA=",
   "success": true,
   "projectFilePath": "/home/nhartmann/RiderProjects/AstroPlanner/AstroPlanner/AstroPlanner.csproj",
   "expectedPackageFiles": [
@@ -33,13 +33,17 @@
     "/home/nhartmann/.nuget/packages/microsoft.extensions.dependencyinjection.abstractions/8.0.0/microsoft.extensions.dependencyinjection.abstractions.8.0.0.nupkg.sha512",
     "/home/nhartmann/.nuget/packages/microsoft.extensions.logging.abstractions/8.0.0/microsoft.extensions.logging.abstractions.8.0.0.nupkg.sha512",
     "/home/nhartmann/.nuget/packages/microsoft.io.recyclablememorystream/3.0.1/microsoft.io.recyclablememorystream.3.0.1.nupkg.sha512",
+    "/home/nhartmann/.nuget/packages/microsoft.net.illink.tasks/10.0.4/microsoft.net.illink.tasks.10.0.4.nupkg.sha512",
     "/home/nhartmann/.nuget/packages/skiasharp/3.119.3-preview.1.1/skiasharp.3.119.3-preview.1.1.nupkg.sha512",
     "/home/nhartmann/.nuget/packages/skiasharp.nativeassets.linux/3.119.3-preview.1.1/skiasharp.nativeassets.linux.3.119.3-preview.1.1.nupkg.sha512",
     "/home/nhartmann/.nuget/packages/skiasharp.nativeassets.macos/3.119.3-preview.1.1/skiasharp.nativeassets.macos.3.119.3-preview.1.1.nupkg.sha512",
     "/home/nhartmann/.nuget/packages/skiasharp.nativeassets.webassembly/3.119.3-preview.1.1/skiasharp.nativeassets.webassembly.3.119.3-preview.1.1.nupkg.sha512",
     "/home/nhartmann/.nuget/packages/skiasharp.nativeassets.win32/3.119.3-preview.1.1/skiasharp.nativeassets.win32.3.119.3-preview.1.1.nupkg.sha512",
     "/home/nhartmann/.nuget/packages/tmds.dbus.protocol/0.90.3/tmds.dbus.protocol.0.90.3.nupkg.sha512",
-    "/home/nhartmann/.nuget/packages/microsoft.aspnetcore.app.ref/10.0.4/microsoft.aspnetcore.app.ref.10.0.4.nupkg.sha512"
+    "/home/nhartmann/.nuget/packages/microsoft.netcore.app.runtime.linux-x64/10.0.4/microsoft.netcore.app.runtime.linux-x64.10.0.4.nupkg.sha512",
+    "/home/nhartmann/.nuget/packages/microsoft.aspnetcore.app.ref/10.0.4/microsoft.aspnetcore.app.ref.10.0.4.nupkg.sha512",
+    "/home/nhartmann/.nuget/packages/microsoft.aspnetcore.app.runtime.linux-x64/10.0.4/microsoft.aspnetcore.app.runtime.linux-x64.10.0.4.nupkg.sha512",
+    "/home/nhartmann/.nuget/packages/microsoft.netcore.app.host.linux-x64/10.0.4/microsoft.netcore.app.host.linux-x64.10.0.4.nupkg.sha512"
   ],
   "logs": [
     {
@@ -51,7 +55,8 @@
       "filePath": "/home/nhartmann/RiderProjects/AstroPlanner/AstroPlanner/AstroPlanner.csproj",
       "libraryId": "Tmds.DBus.Protocol",
       "targetGraphs": [
-        "net10.0"
+        "net10.0",
+        "net10.0/linux-x64"
       ]
     }
   ]

@@ -295,10 +295,10 @@ public partial class PlannerViewModel : ViewModelBase
             filtered = filtered.Where(r => r.DsoSource == null ||
                 (r.DsoSource.Type != ObjectType.Star && r.DsoSource.Type != ObjectType.DoubleStar));
 
-        // Magnitude — exempt planets/comets and DSOs with no magnitude data
+        // Magnitude — exempt planets; pass comets without a computed magnitude; filter the rest
         filtered = filtered.Where(r =>
             r.SolarSystemSource != null ||
-            r.CometSource != null ||
+            (r.CometSource != null && (r.CometSource.Magnitude == null || r.CometSource.Magnitude <= (double)MaxMagnitude)) ||
             (r.DsoSource != null &&
              ((r.DsoSource.MagnitudeV == null && r.DsoSource.MagnitudeB == null) ||
               r.DsoSource.DisplayMagnitude <= (double)MaxMagnitude)));
