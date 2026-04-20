@@ -324,6 +324,42 @@ public partial class ObjectRowViewModel : ObservableObject
         }
     }
 
+    // ── Perihelion proximity (comets only) ───────────────────────────────────
+
+    private double DaysToPerihelion() =>
+        (AstronomyService.FromJulianDay(CometSource!.PerihelionJd) - DateTime.UtcNow).TotalDays;
+
+    public string PerihelionDisplay
+    {
+        get
+        {
+            if (CometSource == null) return "";
+            double d = DaysToPerihelion();
+            if (Math.Abs(d) < 1) return "today";
+            return d > 0 ? $"in {(int)d}d" : $"{(int)Math.Abs(d)}d ago";
+        }
+    }
+
+    public string PerihelionTooltip => CometSource != null
+        ? $"Perihelion {AstronomyService.FromJulianDay(CometSource.PerihelionJd):yyyy-MM-dd}"
+        : "";
+
+    public IBrush PerihelionColor
+    {
+        get
+        {
+            if (CometSource == null) return Brushes.Transparent;
+            double abs = Math.Abs(DaysToPerihelion());
+            return abs <= 60  ? new SolidColorBrush(Color.FromRgb(80, 200, 100))
+                 : abs <= 180 ? new SolidColorBrush(Color.FromRgb(220, 180, 50))
+                 : new SolidColorBrush(Color.FromRgb(120, 120, 120));
+        }
+    }
+
+    public double SortPerihelion => CometSource != null
+        ? Math.Abs(DaysToPerihelion())
+        : double.MaxValue;
+
     // Sort keys (numeric, for ViewModel sorting)
     public double SortDuration  => Visibility.Duration.TotalMinutes;
     public double SortMag       => Magnitude ?? 99;

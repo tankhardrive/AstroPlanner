@@ -235,6 +235,23 @@
                     </DataGridTextColumn.Header>
                 </DataGridTextColumn>
 
+                <!-- Perihelion proximity (comets only, blank for other objects) -->
+                <DataGridTemplateColumn Width="90" SortMemberPath="SortPerihelion" CanUserSort="True">
+                    <DataGridTemplateColumn.Header>
+                        <TextBlock Text="Perihelion"
+                                   ToolTip.Tip="Days to or from perihelion (nearest = brightest).&#x0a;&#x0a;Green  = within 60 days — near peak brightness&#x0a;Yellow = 60–180 days&#x0a;Gray   = &gt;180 days or not a comet"/>
+                    </DataGridTemplateColumn.Header>
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:ObjectRowViewModel">
+                            <TextBlock Text="{Binding PerihelionDisplay}"
+                                       Foreground="{Binding PerihelionColor}"
+                                       ToolTip.Tip="{Binding PerihelionTooltip}"
+                                       Margin="12,0" VerticalAlignment="Center"
+                                       FontSize="11"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
                 <DataGridTextColumn Binding="{Binding BestSetupDisplay}"
                                     Width="200" SortMemberPath="SortBestFill">
                     <DataGridTextColumn.Header>

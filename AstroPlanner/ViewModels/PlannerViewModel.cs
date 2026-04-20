@@ -346,6 +346,7 @@ public partial class PlannerViewModel : ViewModelBase
                 "MoonSep"   => filtered.OrderBy(r => r.SortMoonSep),
                 "Score"      => filtered.OrderBy(r => r.SortScore),
                 "SkyQuality" => filtered.OrderBy(r => r.SortSkyQuality),
+                "Perihelion" => filtered.OrderBy(r => r.SortPerihelion),
                 "BestSetup"  => filtered.OrderBy(r => r.SortBestFill),
                 "VisStart"  => filtered.OrderBy(r => r.Visibility.RiseTime ?? DateTime.MaxValue),
                 _           => filtered.OrderBy(r => r.SortDuration),
@@ -365,6 +366,7 @@ public partial class PlannerViewModel : ViewModelBase
                 "MoonSep"   => filtered.OrderByDescending(r => r.SortMoonSep),
                 "Score"      => filtered.OrderByDescending(r => r.SortScore),
                 "SkyQuality" => filtered.OrderByDescending(r => r.SortSkyQuality),
+                "Perihelion" => filtered.OrderByDescending(r => r.SortPerihelion),
                 "BestSetup"  => filtered.OrderByDescending(r => r.SortBestFill),
                 "VisStart"  => filtered.OrderByDescending(r => r.Visibility.RiseTime ?? DateTime.MinValue),
                 _           => filtered.OrderByDescending(r => r.SortDuration),
@@ -386,7 +388,7 @@ public partial class PlannerViewModel : ViewModelBase
         {
             SortColumn = column;
             // Default direction: ascending for name/type/constellation; descending for everything else
-            SortAscending = column is "Name" or "Type" or "Const" or "VisStart";
+            SortAscending = column is "Name" or "Type" or "Const" or "VisStart" or "Perihelion";
         }
         ApplyFilterAndSort();
     }

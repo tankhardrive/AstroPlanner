@@ -11,6 +11,9 @@ public class AstronomyService
 {
     // ── Julian Day ────────────────────────────────────────────────────────────
 
+    public static DateTime FromJulianDay(double jd) =>
+        new DateTime(2000, 1, 1, 12, 0, 0, DateTimeKind.Utc).AddDays(jd - 2451545.0);
+
     public static double ToJulianDay(DateTime utc)
     {
         double dayFraction = utc.Day + utc.TimeOfDay.TotalDays;

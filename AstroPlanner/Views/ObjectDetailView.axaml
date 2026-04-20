@@ -117,7 +117,7 @@
             <Separator Margin="8,0"/>
 
             <!-- Catalog data -->
-            <Grid Margin="12,8,12,12" ColumnDefinitions="Auto,8,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+            <Grid Margin="12,8,12,12" ColumnDefinitions="Auto,8,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
                 <TextBlock Grid.Row="0" Grid.Column="0" Text="Type"        Opacity="0.6" FontSize="12"/>
                 <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding DetailType}" FontSize="12"/>
 
@@ -141,6 +141,11 @@
 
                 <TextBlock Grid.Row="7" Grid.Column="0" Text="Dec (J2000)" Opacity="0.6" FontSize="12" Margin="0,3,0,0"/>
                 <TextBlock Grid.Row="7" Grid.Column="2" Text="{Binding DetailDec}" FontSize="12" FontFamily="monospace" Margin="0,3,0,0"/>
+
+                <TextBlock Grid.Row="8" Grid.Column="0" Text="Perihelion" Opacity="0.6" FontSize="12" Margin="0,3,0,0"
+                           IsVisible="{Binding IsComet}"/>
+                <TextBlock Grid.Row="8" Grid.Column="2" Text="{Binding DetailPerihelion}" FontSize="12" Margin="0,3,0,0"
+                           IsVisible="{Binding IsComet}"/>
             </Grid>
 
             <Separator Margin="8,0"/>

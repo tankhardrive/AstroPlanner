@@ -92,6 +92,7 @@ public partial class ObjectDetailViewModel : ViewModelBase
     }
 
     public bool IsVisible => Source != null;
+    public bool IsComet   => Source?.CometSource != null;
     public TimeZoneInfo ObservingTimeZone => Source?.TimeZone ?? TimeZoneInfo.Local;
 
     // Detail display properties
@@ -121,6 +122,21 @@ public partial class ObjectDetailViewModel : ViewModelBase
         ? $"{Source.PeakAltDisplay} at {Source.PeakTimeDisplay}" : "—";
 
     public string DetailMoonSep => Source?.MoonSepDisplay ?? "—";
+
+    public string DetailPerihelion
+    {
+        get
+        {
+            if (Source?.CometSource is not CometObject comet) return "—";
+            var periDate = AstronomyService.FromJulianDay(comet.PerihelionJd);
+            double days = (periDate - DateTime.UtcNow).TotalDays;
+            string dateStr = periDate.ToString("yyyy-MM-dd");
+            if (Math.Abs(days) < 1) return $"{dateStr} (today!)";
+            return days > 0
+                ? $"{dateStr} (in {(int)days} days)"
+                : $"{dateStr} ({(int)Math.Abs(days)} days ago)";
+        }
+    }
 
     // ── AstroBin ──────────────────────────────────────────────────────────────
 
@@ -234,6 +250,7 @@ public partial class ObjectDetailViewModel : ViewModelBase
         }
 
         OnPropertyChanged(nameof(IsVisible));
+        OnPropertyChanged(nameof(IsComet));
         OnPropertyChanged(nameof(DetailName));
         OnPropertyChanged(nameof(DetailCatalogs));
         OnPropertyChanged(nameof(DetailType));
@@ -247,6 +264,7 @@ public partial class ObjectDetailViewModel : ViewModelBase
         OnPropertyChanged(nameof(DetailVisibility));
         OnPropertyChanged(nameof(DetailPeak));
         OnPropertyChanged(nameof(DetailMoonSep));
+        OnPropertyChanged(nameof(DetailPerihelion));
         OnPropertyChanged(nameof(ObservingTimeZone));
         OnPropertyChanged(nameof(SetupResults));
 

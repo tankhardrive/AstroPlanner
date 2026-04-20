@@ -367,4 +367,26 @@ public partial class SettingsViewModel : ViewModelBase
     }
 
     public AppSettings GetCurrentSettings() => _settings;
+
+    // ── Comet cache ───────────────────────────────────────────────────────────
+
+    private static readonly string CometCacheFile = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "AstroPlanner", "comets.json");
+
+    [ObservableProperty] private string _cometCacheMessage = "";
+
+    [RelayCommand]
+    private void ClearCometCache()
+    {
+        if (File.Exists(CometCacheFile))
+        {
+            File.Delete(CometCacheFile);
+            CometCacheMessage = "Cache cleared. Data will be re-fetched on next launch.";
+        }
+        else
+        {
+            CometCacheMessage = "No cache found.";
+        }
+    }
 }
