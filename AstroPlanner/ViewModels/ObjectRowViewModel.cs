@@ -13,6 +13,7 @@ public partial class ObjectRowViewModel : ObservableObject
 {
     public DeepSkyObject? DsoSource { get; }
     public SolarSystemObject? SolarSystemSource { get; }
+    public CometObject? CometSource { get; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(VisStartDisplay))]
@@ -77,21 +78,29 @@ public partial class ObjectRowViewModel : ObservableObject
         SolarSystemSource = planet;
     }
 
+    public ObjectRowViewModel(CometObject comet)
+    {
+        CometSource = comet;
+    }
+
     // ── Display properties used by the DataGrid ──────────────────────────────
 
-    public string PrimaryName => DsoSource?.DisplayName ?? SolarSystemSource?.Name ?? "";
-    public string CatalogIds  => DsoSource?.CatalogIds  ?? SolarSystemSource?.BodyType.ToString() ?? "";
+    public string PrimaryName => DsoSource?.DisplayName ?? SolarSystemSource?.Name ?? CometSource?.DisplayName ?? "";
+    public string CatalogIds  => DsoSource?.CatalogIds  ?? SolarSystemSource?.BodyType.ToString()
+                                 ?? CometSource?.Designation ?? "";
 
     public string TypeDisplay => DsoSource != null
         ? DsoSource.Type.ToDisplayString()
-        : SolarSystemSource?.BodyType.ToString() ?? "";
+        : SolarSystemSource?.BodyType.ToString()
+          ?? (CometSource != null ? "Comet" : "");
 
     public string Constellation => DsoSource != null
         ? ConstellationNames.Expand(DsoSource.Constellation)
         : "—";
 
     public double? Magnitude => DsoSource?.DisplayMagnitude is double m and < 90 ? m
-        : SolarSystemSource?.Magnitude;
+        : SolarSystemSource?.Magnitude
+          ?? CometSource?.Magnitude;
 
     public string MagnitudeDisplay => Magnitude is double mag ? mag.ToString("F1") : "—";
 

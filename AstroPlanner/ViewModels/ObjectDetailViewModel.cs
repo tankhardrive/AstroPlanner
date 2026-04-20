@@ -98,7 +98,8 @@ public partial class ObjectDetailViewModel : ViewModelBase
     public string DetailName     => Source?.PrimaryName ?? "";
     public string DetailCatalogs => Source?.CatalogIds ?? "";
     public string DetailType     => Source?.DsoSource?.Type.ToDisplayString()
-                                    ?? Source?.SolarSystemSource?.BodyType.ToString() ?? "";
+                                    ?? Source?.SolarSystemSource?.BodyType.ToString()
+                                    ?? (Source?.CometSource != null ? "Comet" : "");
     public string DetailConst    => Source?.DsoSource is DeepSkyObject dso0
                                     ? ConstellationNames.Expand(dso0.Constellation) : "—";
     public string DetailMag      => Source?.MagnitudeDisplay ?? "—";
@@ -107,8 +108,10 @@ public partial class ObjectDetailViewModel : ViewModelBase
                                     ? $"{sb:F1} mag/□″" : "—";
     public string DetailHubble   => Source?.DsoSource?.HubbleType ?? "—";
 
-    public string DetailRa  => Source?.DsoSource is DeepSkyObject dso1 ? FormatRa(dso1.RaDegrees) : "—";
-    public string DetailDec => Source?.DsoSource is DeepSkyObject dso2 ? FormatDec(dso2.DecDegrees) : "—";
+    public string DetailRa  => Source?.DsoSource is DeepSkyObject dso1 ? FormatRa(dso1.RaDegrees)
+                               : Source?.CometSource is CometObject c1 ? FormatRa(c1.RaDegrees) : "—";
+    public string DetailDec => Source?.DsoSource is DeepSkyObject dso2 ? FormatDec(dso2.DecDegrees)
+                               : Source?.CometSource is CometObject c2 ? FormatDec(c2.DecDegrees) : "—";
 
     public string DetailVisibility => Source?.Visibility is { IsVisible: true }
         ? $"{Source.VisStartDisplay} – {Source.VisEndDisplay}  ({Source.DurationDisplay})"
@@ -163,6 +166,12 @@ public partial class ObjectDetailViewModel : ViewModelBase
             dec = ss.DecDegrees;
             fov = 0.5;
         }
+        else if (Source?.CometSource is CometObject comet)
+        {
+            ra  = comet.RaDegrees;
+            dec = comet.DecDegrees;
+            fov = 1.0;
+        }
         else return;
 
         var decStr = dec >= 0 ? $"+{dec:F5}" : $"{dec:F5}";
@@ -209,6 +218,21 @@ public partial class ObjectDetailViewModel : ViewModelBase
 
     partial void OnSourceChanged(ObjectRowViewModel? value)
     {
+        // Ensure comet position and magnitude are available for display
+        // even if the user hasn't pressed Calculate yet.
+        if (value?.CometSource is CometObject comet)
+        {
+            var utc = new DateTime(ObservingDate.Year, ObservingDate.Month, ObservingDate.Day,
+                                   4, 0, 0, DateTimeKind.Utc);
+            if (comet.RaDegrees == 0 && comet.DecDegrees == 0)
+            {
+                var (ra, dec) = AstronomyService.GetCometPosition(comet, utc);
+                comet.RaDegrees = ra;
+                comet.DecDegrees = dec;
+            }
+            comet.Magnitude ??= AstronomyService.GetCometMagnitude(comet, utc);
+        }
+
         OnPropertyChanged(nameof(IsVisible));
         OnPropertyChanged(nameof(DetailName));
         OnPropertyChanged(nameof(DetailCatalogs));
@@ -263,6 +287,12 @@ public partial class ObjectDetailViewModel : ViewModelBase
             ra = ss.RaDegrees;
             dec = ss.DecDegrees;
             sizeDeg = 0.25;
+        }
+        else if (row.CometSource is CometObject comet)
+        {
+            ra = comet.RaDegrees;
+            dec = comet.DecDegrees;
+            sizeDeg = 0.5;
         }
         else return;
 
@@ -336,15 +366,19 @@ public partial class ObjectDetailViewModel : ViewModelBase
             if (row.DsoSource is DeepSkyObject dso)
             {
                 samples = _visService.GetAltitudeSamples(
-                    dso.RaDegrees, dso.DecDegrees,
-                    isFixedCoord: true, bodyType: null,
+                    _ => (dso.RaDegrees, dso.DecDegrees),
                     ObservingDate, Site, Horizon, stepMinutes: 5);
             }
             else if (row.SolarSystemSource is SolarSystemObject ss)
             {
                 samples = _visService.GetAltitudeSamples(
-                    0, 0,
-                    isFixedCoord: false, bodyType: ss.BodyType,
+                    t => AstronomyService.GetPlanetPosition(ss.BodyType, t),
+                    ObservingDate, Site, Horizon, stepMinutes: 5);
+            }
+            else if (row.CometSource is CometObject comet)
+            {
+                samples = _visService.GetAltitudeSamples(
+                    t => AstronomyService.GetCometPosition(comet, t),
                     ObservingDate, Site, Horizon, stepMinutes: 5);
             }
             else return;

@@ -10,6 +10,7 @@ public partial class PlannerViewModel : ViewModelBase
 {
     private readonly CatalogService _catalog;
     private readonly VisibilityService _visibility;
+    private readonly CometService _comets;
 
     // All rows built from catalog + solar system objects
     private List<ObjectRowViewModel> _allRows = [];
@@ -46,6 +47,8 @@ public partial class PlannerViewModel : ViewModelBase
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasActiveFilters))]
     private bool _showPlanets = true;
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasActiveFilters))]
+    private bool _showComets = true;
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasActiveFilters))]
     private bool _showStars = false;
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasActiveFilters))]
     private bool _onlyVisible = false;
@@ -73,18 +76,21 @@ public partial class PlannerViewModel : ViewModelBase
     [ObservableProperty] private string _sortColumn = "Duration";
     [ObservableProperty] private bool _sortAscending = false;
 
+    [ObservableProperty] private bool _isRefreshingComets;
+
     public bool HasActiveFilters =>
-        !ShowGalaxies || !ShowClusters || !ShowNebulae || !ShowPlanets ||
+        !ShowGalaxies || !ShowClusters || !ShowNebulae || !ShowPlanets || !ShowComets ||
         ShowStars || OnlyVisible ||
         MinDurationHours > 0 || MaxMagnitude < 14 ||
         !ShowMessier || !ShowCaldwell || !ShowNgc || !ShowIc ||
         SelectedConstellation != "All" ||
         SearchText.Length > 0;
 
-    public PlannerViewModel(CatalogService catalog, VisibilityService visibility)
+    public PlannerViewModel(CatalogService catalog, VisibilityService visibility, CometService comets)
     {
         _catalog = catalog;
         _visibility = visibility;
+        _comets = comets;
     }
 
     /// <summary>
@@ -111,9 +117,11 @@ public partial class PlannerViewModel : ViewModelBase
     {
         var dsObjects = _catalog.GetAll();
         var planets = SolarSystemObject.CreateDefaults();
+        var cometList = _comets.GetAll();
 
         _allRows = dsObjects.Select(d => new ObjectRowViewModel(d) { Setups = _setups })
             .Concat(planets.Select(p => new ObjectRowViewModel(p) { Setups = _setups }))
+            .Concat(cometList.Select(c => new ObjectRowViewModel(c) { Setups = _setups }))
             .ToList();
 
         var consts = new List<string> { "All" };
@@ -123,7 +131,40 @@ public partial class PlannerViewModel : ViewModelBase
         Constellations = consts;
 
         ApplyFilterAndSort();
-        StatusText = $"{dsObjects.Count:N0} objects loaded. Select a date and press Calculate.";
+        int cometCount = cometList.Count;
+        string cometInfo = cometCount > 0 ? $", {cometCount} comets" : "";
+        StatusText = $"{dsObjects.Count:N0} objects loaded{cometInfo}. Select a date and press Calculate.";
+    }
+
+    [RelayCommand]
+    private async Task RefreshCometsAsync()
+    {
+        IsRefreshingComets = true;
+        StatusText = "Refreshing comet data from MPC…";
+        try
+        {
+            var error = await _comets.RefreshAsync();
+            if (error != null)
+            {
+                StatusText = $"Failed to refresh comets: {error}";
+            }
+            else
+            {
+                RebuildCometRows();
+                StatusText = $"Comets updated: {_comets.GetAll().Count} currently observable.";
+            }
+        }
+        finally
+        {
+            IsRefreshingComets = false;
+        }
+    }
+
+    private void RebuildCometRows()
+    {
+        _allRows = _allRows.Where(r => r.CometSource == null).ToList();
+        _allRows.AddRange(_comets.GetAll().Select(c => new ObjectRowViewModel(c) { Setups = _setups }));
+        ApplyFilterAndSort();
     }
 
     // ── Calculate visibility ──────────────────────────────────────────────────
@@ -143,14 +184,21 @@ public partial class PlannerViewModel : ViewModelBase
             var midNight = darkStart + (darkEnd - darkStart) / 2;
             var moonInfo = AstronomyService.GetMoonPosition(midNight);
 
-            // Update solar system object positions
+            // Update solar system and comet positions at midnight for detail view
             foreach (var row in _allRows.Where(r => r.SolarSystemSource != null))
             {
                 var ss = row.SolarSystemSource!;
                 var (ra, dec) = AstronomyService.GetPlanetPosition(ss.BodyType, midNight);
-                var (moon_ra, moon_dec, moon_illum) = moonInfo;
                 ss.RaDegrees = ra;
                 ss.DecDegrees = dec;
+            }
+            foreach (var row in _allRows.Where(r => r.CometSource != null))
+            {
+                var comet = row.CometSource!;
+                var (ra, dec) = AstronomyService.GetCometPosition(comet, midNight);
+                comet.RaDegrees = ra;
+                comet.DecDegrees = dec;
+                comet.Magnitude = AstronomyService.GetCometMagnitude(comet, midNight);
             }
 
             int total = _allRows.Count;
@@ -174,6 +222,12 @@ public partial class PlannerViewModel : ViewModelBase
                     {
                         vis = _visibility.ComputeSolarSystem(
                             row.SolarSystemSource, args.Date, args.Site, args.Horizon,
+                            args.StepMinutes, moonInfo);
+                    }
+                    else if (row.CometSource != null)
+                    {
+                        vis = _visibility.ComputeComet(
+                            row.CometSource, args.Date, args.Site, args.Horizon,
                             args.StepMinutes, moonInfo);
                     }
                     else return;
@@ -235,21 +289,26 @@ public partial class PlannerViewModel : ViewModelBase
                 !IsNebulaType(r.DsoSource.Type));
         if (!ShowPlanets)
             filtered = filtered.Where(r => r.SolarSystemSource == null);
+        if (!ShowComets)
+            filtered = filtered.Where(r => r.CometSource == null);
         if (!ShowStars)
             filtered = filtered.Where(r => r.DsoSource == null ||
                 (r.DsoSource.Type != ObjectType.Star && r.DsoSource.Type != ObjectType.DoubleStar));
 
-        // Magnitude — exempt objects with no magnitude data (they have DisplayMagnitude=99)
+        // Magnitude — exempt planets/comets and DSOs with no magnitude data
         filtered = filtered.Where(r =>
-            r.DsoSource == null ||
-            (r.DsoSource.MagnitudeV == null && r.DsoSource.MagnitudeB == null) ||
-            r.DsoSource.DisplayMagnitude <= (double)MaxMagnitude);
+            r.SolarSystemSource != null ||
+            r.CometSource != null ||
+            (r.DsoSource != null &&
+             ((r.DsoSource.MagnitudeV == null && r.DsoSource.MagnitudeB == null) ||
+              r.DsoSource.DisplayMagnitude <= (double)MaxMagnitude)));
 
         // Catalog — if any catalog is deselected, restrict DSOs to the checked catalogs
         if (!ShowMessier || !ShowCaldwell || !ShowNgc || !ShowIc)
         {
             filtered = filtered.Where(r =>
                 r.SolarSystemSource != null ||  // planets never filtered by catalog
+                r.CometSource != null ||         // comets never filtered by catalog
                 (ShowMessier  && r.DsoSource?.MessierNumber != null) ||
                 (ShowCaldwell && r.DsoSource?.CaldwellNumber != null) ||
                 (ShowNgc      && r.DsoSource?.Name.StartsWith("NGC") == true) ||
@@ -336,7 +395,7 @@ public partial class PlannerViewModel : ViewModelBase
     private void ClearFilters()
     {
         SearchText = "";
-        ShowGalaxies = ShowClusters = ShowNebulae = ShowPlanets = true;
+        ShowGalaxies = ShowClusters = ShowNebulae = ShowPlanets = ShowComets = true;
         ShowStars = false;
         OnlyVisible = false;
         MinDurationHours = 0m;
@@ -364,6 +423,7 @@ public partial class PlannerViewModel : ViewModelBase
     partial void OnShowClustersChanged(bool value) => ApplyFilterAndSort();
     partial void OnShowNebulaeChanged(bool value) => ApplyFilterAndSort();
     partial void OnShowPlanetsChanged(bool value) => ApplyFilterAndSort();
+    partial void OnShowCometsChanged(bool value) => ApplyFilterAndSort();
     partial void OnShowStarsChanged(bool value) => ApplyFilterAndSort();
     partial void OnOnlyVisibleChanged(bool value) => ApplyFilterAndSort();
     partial void OnMinDurationHoursChanged(decimal value) => ApplyFilterAndSort();

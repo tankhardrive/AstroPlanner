@@ -25,6 +25,13 @@
                     <CheckBox Content="Nebulae"   IsChecked="{Binding ShowNebulae}"/>
                     <CheckBox Content="Planets"   IsChecked="{Binding ShowPlanets}"/>
                     <CheckBox Content="Stars"     IsChecked="{Binding ShowStars}"/>
+                    <CheckBox Content="Comets"    IsChecked="{Binding ShowComets}"/>
+                    <Button Content="↺"
+                            Command="{Binding RefreshCometsCommand}"
+                            IsEnabled="{Binding !IsRefreshingComets}"
+                            ToolTip.Tip="Refresh comet data from MPC"
+                            Padding="6,2"
+                            VerticalAlignment="Center"/>
                 </StackPanel>
 
                 <!-- Catalog filter -->

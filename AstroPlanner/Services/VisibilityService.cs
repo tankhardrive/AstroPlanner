@@ -9,9 +9,6 @@ public class VisibilityService
 {
     private readonly AstronomyService _astronomy = new();
 
-    /// <summary>
-    /// Compute visibility for a fixed-coordinate deep sky object.
-    /// </summary>
     public VisibilityWindow ComputeDso(
         DeepSkyObject obj,
         DateOnly observingDate,
@@ -21,15 +18,10 @@ public class VisibilityService
         (double RaDeg, double DecDeg, double IllumPct) moonInfo)
     {
         return Compute(
-            obj.RaDegrees, obj.DecDegrees,
-            isFixedCoord: true,
-            bodyType: null,
+            _ => (obj.RaDegrees, obj.DecDegrees),
             observingDate, site, horizon, stepMinutes, moonInfo);
     }
 
-    /// <summary>
-    /// Compute visibility for a solar system object (position recomputed each step).
-    /// </summary>
     public VisibilityWindow ComputeSolarSystem(
         SolarSystemObject obj,
         DateOnly observingDate,
@@ -39,16 +31,25 @@ public class VisibilityService
         (double RaDeg, double DecDeg, double IllumPct) moonInfo)
     {
         return Compute(
-            0, 0,
-            isFixedCoord: false,
-            bodyType: obj.BodyType,
+            t => AstronomyService.GetPlanetPosition(obj.BodyType, t),
+            observingDate, site, horizon, stepMinutes, moonInfo);
+    }
+
+    public VisibilityWindow ComputeComet(
+        CometObject comet,
+        DateOnly observingDate,
+        ObservationSite site,
+        HorizonProfile horizon,
+        int stepMinutes,
+        (double RaDeg, double DecDeg, double IllumPct) moonInfo)
+    {
+        return Compute(
+            t => AstronomyService.GetCometPosition(comet, t),
             observingDate, site, horizon, stepMinutes, moonInfo);
     }
 
     private VisibilityWindow Compute(
-        double fixedRa, double fixedDec,
-        bool isFixedCoord,
-        SolarSystemBodyType? bodyType,
+        Func<DateTime, (double Ra, double Dec)> getPosition,
         DateOnly observingDate,
         ObservationSite site,
         HorizonProfile horizon,
@@ -66,27 +67,16 @@ public class VisibilityService
         double peakAz = 0;
         double peakClearance = double.MinValue;
         DateTime peakTime = darkStart;
-        double peakRa = fixedRa, peakDec = fixedDec;
+        double peakRa = 0, peakDec = 0;
         double visibleAltSum = 0;
         int visibleAltCount = 0;
 
-        // Sample the night
         var steps = new List<(DateTime Time, double Alt, double HorizAlt)>();
         var t = darkStart;
 
         while (t <= darkEnd)
         {
-            double ra, dec;
-            if (isFixedCoord)
-            {
-                ra = fixedRa;
-                dec = fixedDec;
-            }
-            else
-            {
-                (ra, dec) = AstronomyService.GetPlanetPosition(bodyType!.Value, t);
-            }
-
+            var (ra, dec) = getPosition(t);
             var (alt, az) = AstronomyService.EquatorialToHorizontal(ra, dec, t,
                 site.LatitudeDegrees, site.LongitudeDegrees);
             double horizAlt = horizon.GetAltitudeAt(az);
@@ -119,13 +109,9 @@ public class VisibilityService
         if (visibleMinutes <= 0)
             return VisibilityWindow.NeverVisible;
 
-        // Moon separation at peak
         double moonSep = AstronomyService.AngularSeparationDeg(
             peakRa, peakDec, moonInfo.RaDeg, moonInfo.DecDeg);
 
-        // Approximate rise/set times: first and last visible steps.
-        // riseDetected guards against the null-as-sentinel ambiguity: riseTime can legitimately
-        // be null (= "visible from start of darkness"), so we can't use null to mean "not yet found".
         DateTime? riseTime = null, setTime = null;
         bool riseDetected = false;
 
@@ -161,12 +147,10 @@ public class VisibilityService
     }
 
     /// <summary>
-    /// Returns all (time, alt, horizAlt, az) samples for an object over the night — used for altitude plots.
+    /// Returns altitude samples for a fixed-coordinate or moving object over the night — used for altitude plots.
     /// </summary>
     public List<(DateTime Time, double Alt, double HorizAlt, double Az)> GetAltitudeSamples(
-        double raDeg, double decDeg,
-        bool isFixedCoord,
-        SolarSystemBodyType? bodyType,
+        Func<DateTime, (double Ra, double Dec)> getPosition,
         DateOnly observingDate,
         ObservationSite site,
         HorizonProfile horizon,
@@ -178,10 +162,7 @@ public class VisibilityService
 
         while (t <= darkEnd)
         {
-            double ra, dec;
-            if (isFixedCoord) { ra = raDeg; dec = decDeg; }
-            else (ra, dec) = AstronomyService.GetPlanetPosition(bodyType!.Value, t);
-
+            var (ra, dec) = getPosition(t);
             var (alt, az) = AstronomyService.EquatorialToHorizontal(ra, dec, t,
                 site.LatitudeDegrees, site.LongitudeDegrees);
             samples.Add((t, alt, horizon.GetAltitudeAt(az), az));

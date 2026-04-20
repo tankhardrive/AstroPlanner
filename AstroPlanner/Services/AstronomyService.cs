@@ -202,6 +202,46 @@ public class AstronomyService
         return (eq.X * 15.0, eq.Y);
     }
 
+    // ── Comets ────────────────────────────────────────────────────────────────
+
+    public static (double RaDeg, double DecDeg) GetCometPosition(Models.CometObject comet, DateTime utc)
+    {
+        double jd = ToJulianDay(utc);
+        var elements = BuildNearParabolicElements(comet);
+        var details = AASNearParabolic.Calculate(jd, ref elements, false);
+        return (details.AstrometricGeocentricRA * 15.0, details.AstrometricGeocentricDeclination);
+    }
+
+    public static double? GetCometMagnitude(Models.CometObject comet, DateTime utc)
+    {
+        if (comet.MagnitudeH == null) return null;
+        double jd = ToJulianDay(utc);
+        var elements = BuildNearParabolicElements(comet);
+        try
+        {
+            var details = AASNearParabolic.Calculate(jd, ref elements, false);
+            double delta = details.AstrometricGeocentricDistance;
+            double v = 0, r = 0;
+            AASNearParabolic.CalulateTrueAnnomalyAndRadius(jd, ref elements, ref v, ref r);
+            if (delta <= 0 || r <= 0) return null;
+            double G = comet.MagnitudeG ?? 4.0;
+            return comet.MagnitudeH.Value + 5.0 * Math.Log10(delta) + 2.5 * G * Math.Log10(r);
+        }
+        catch { return null; }
+    }
+
+    private static AASNearParabolicObjectElements BuildNearParabolicElements(Models.CometObject comet) =>
+        new()
+        {
+            q = comet.PerihelionDistanceAu,
+            e = comet.Eccentricity,
+            i = comet.InclinationDeg,
+            w = comet.ArgPerihelionDeg,
+            omega = comet.LongAscNodeDeg,
+            JDEquinox = 2451545.0,
+            T = comet.PerihelionJd,
+        };
+
     // ── Angular separation ────────────────────────────────────────────────────
 
     public static double AngularSeparationDeg(double ra1, double dec1, double ra2, double dec2)

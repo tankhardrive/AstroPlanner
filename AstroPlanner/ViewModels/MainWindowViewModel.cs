@@ -13,6 +13,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly SettingsService _settingsService;
     private readonly WeatherService _weatherService = new();
     private readonly LightPollutionService _lightPollutionService = new();
+    private readonly CometService _cometService = new();
     private AppSettings _settings;
 
     public PlannerViewModel Planner { get; }
@@ -70,7 +71,7 @@ public partial class MainWindowViewModel : ViewModelBase
         var visibility = new VisibilityService();
         var images = new ImageService();
 
-        Planner      = new PlannerViewModel(catalog, visibility);
+        Planner      = new PlannerViewModel(catalog, visibility, _cometService);
         Detail       = new ObjectDetailViewModel(images, visibility);
         Settings     = new SettingsViewModel(_settingsService);
         WeatherStrip = new WeatherStripViewModel(_weatherService);
@@ -91,6 +92,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private async Task InitializeAsync()
     {
+        await _cometService.LoadAsync();
         await Task.Run(() => Planner.Initialize());
         Dispatcher.UIThread.Post(UpdateMoonInfo);
         await RefreshWeatherAsync();
