@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("AstroPlanner")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a11a52250aa2f6028b868021c6499b6685321f58")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b29d627ed37aa3d7c058d0f7a6a59fea06d5fe09")]
 [assembly: System.Reflection.AssemblyProductAttribute("AstroPlanner")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AstroPlanner")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

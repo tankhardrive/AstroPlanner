@@ -14,6 +14,8 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly WeatherService _weatherService = new();
     private readonly LightPollutionService _lightPollutionService = new();
     private readonly CometService _cometService = new();
+    private readonly StellariumService _stellariumService = new();
+    private AnnotationService _annotationService = null!;
     private AppSettings _settings;
 
     public PlannerViewModel Planner { get; }
@@ -67,6 +69,9 @@ public partial class MainWindowViewModel : ViewModelBase
         _settingsService = new SettingsService();
         _settings = _settingsService.Load();
 
+        _annotationService = new AnnotationService(_settingsService, _settings);
+        _stellariumService.BaseUrl = _settings.StellariumUrl;
+
         var catalog = new CatalogService();
         var visibility = new VisibilityService();
         var images = new ImageService();
@@ -75,6 +80,10 @@ public partial class MainWindowViewModel : ViewModelBase
         Detail       = new ObjectDetailViewModel(images, visibility);
         Settings     = new SettingsViewModel(_settingsService, _cometService);
         WeatherStrip = new WeatherStripViewModel(_weatherService);
+
+        Planner.AnnotationService    = _annotationService;
+        Detail.AnnotationService     = _annotationService;
+        Detail.StellariumService     = _stellariumService;
 
         Settings.SettingsSaved += OnSettingsSaved;
         PushSetups();
@@ -109,6 +118,8 @@ public partial class MainWindowViewModel : ViewModelBase
     private void OnSettingsSaved()
     {
         _settings = _settingsService.Load();
+        _annotationService.UpdateSettings(_settings);
+        _stellariumService.BaseUrl = _settings.StellariumUrl;
         OnPropertyChanged(nameof(SiteName));
         OnPropertyChanged(nameof(HorizonName));
         OnPropertyChanged(nameof(BortleDisplay));

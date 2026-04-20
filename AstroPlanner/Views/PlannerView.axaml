@@ -72,6 +72,17 @@
                               IsChecked="{Binding OnlyVisible}"
                               VerticalAlignment="Center"/>
 
+                    <ToggleButton Content="★ Favorites"
+                                  IsChecked="{Binding OnlyFavorites}"
+                                  Padding="8,3" FontSize="11"
+                                  VerticalAlignment="Center"
+                                  ToolTip.Tip="Show only favorited objects"/>
+
+                    <CheckBox Content="Hide imaged"
+                              IsChecked="{Binding HideImaged}"
+                              VerticalAlignment="Center"
+                              ToolTip.Tip="Hide objects you have already imaged"/>
+
                     <Button Content="✕ Clear"
                             Command="{Binding ClearFiltersCommand}"
                             IsVisible="{Binding HasActiveFilters}"
@@ -102,7 +113,44 @@
                   DoubleTapped="OnGridDoubleTapped"
                   x:Name="ObjectGrid">
 
+            <DataGrid.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Toggle Favorite"
+                              Command="{Binding ToggleFavoriteCommand}"
+                              ToolTip.Tip="Add or remove from favorites"/>
+                    <MenuItem Header="Mark as Imaged Today"
+                              Command="{Binding MarkImagedTodayCommand}"
+                              ToolTip.Tip="Record today as the date you imaged this object"/>
+                    <MenuItem Header="Clear Imaged Date"
+                              Command="{Binding ClearImagedCommand}"
+                              ToolTip.Tip="Remove the imaged date from this object"/>
+                </ContextMenu>
+            </DataGrid.ContextMenu>
+
             <DataGrid.Columns>
+
+                <!-- Favorites / Imaged flags -->
+                <DataGridTemplateColumn Width="65" CanUserSort="False">
+                    <DataGridTemplateColumn.Header>
+                        <TextBlock Text="★✓" ToolTip.Tip="★ = favorite  ✓ = imaged"/>
+                    </DataGridTemplateColumn.Header>
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:ObjectRowViewModel">
+                            <StackPanel Orientation="Horizontal" Spacing="2" Margin="6,0" VerticalAlignment="Center">
+                                <TextBlock Text="★"
+                                           FontSize="13"
+                                           Foreground="#FFD700"
+                                           IsVisible="{Binding IsFavorite}"
+                                           ToolTip.Tip="Favorited"/>
+                                <TextBlock Text="✓"
+                                           FontSize="12"
+                                           Foreground="#50C878"
+                                           IsVisible="{Binding HasBeenImaged}"
+                                           ToolTip.Tip="{Binding ImagedOnDisplay}"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
 
                 <DataGridTextColumn Binding="{Binding PrimaryName}"
                                     Width="225" SortMemberPath="PrimaryName">

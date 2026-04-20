@@ -13,6 +13,9 @@ public partial class ObjectDetailViewModel : ViewModelBase
     private readonly ImageService _imageService;
     private readonly VisibilityService _visService;
 
+    public AnnotationService? AnnotationService { get; set; }
+    public StellariumService? StellariumService { get; set; }
+
     [ObservableProperty] private ObjectRowViewModel? _source;
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(ShowNoImage))] private Bitmap? _image;
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(ShowNoImage))] private bool _imageLoading;
@@ -94,6 +97,86 @@ public partial class ObjectDetailViewModel : ViewModelBase
     public bool IsVisible => Source != null;
     public bool IsComet   => Source?.CometSource != null;
     public TimeZoneInfo ObservingTimeZone => Source?.TimeZone ?? TimeZoneInfo.Local;
+
+    // ── Annotations ───────────────────────────────────────────────────────────
+
+    public bool DetailIsFavorite =>
+        Source != null && (AnnotationService?.IsFavorite(Source.AnnotationKey) ?? false);
+
+    public string FavoriteLabel => DetailIsFavorite ? "★ Favorited" : "☆ Favorite";
+
+    public bool DetailHasBeenImaged =>
+        Source != null && AnnotationService?.GetImagedOn(Source.AnnotationKey) != null;
+
+    public bool DetailIsNotImaged => !DetailHasBeenImaged;
+
+    public string ImagedLabel => DetailHasBeenImaged
+        ? $"✓ Imaged {AnnotationService!.GetImagedOn(Source!.AnnotationKey):yyyy-MM-dd}"
+        : "Mark Imaged";
+
+    private void NotifyAnnotationProperties()
+    {
+        OnPropertyChanged(nameof(DetailIsFavorite));
+        OnPropertyChanged(nameof(FavoriteLabel));
+        OnPropertyChanged(nameof(DetailHasBeenImaged));
+        OnPropertyChanged(nameof(DetailIsNotImaged));
+        OnPropertyChanged(nameof(ImagedLabel));
+    }
+
+    [RelayCommand]
+    private void ToggleFavorite()
+    {
+        if (Source == null || AnnotationService == null) return;
+        AnnotationService.SetFavorite(Source.AnnotationKey,
+            !AnnotationService.IsFavorite(Source.AnnotationKey));
+        Source.NotifyAnnotationChanged();
+        NotifyAnnotationProperties();
+    }
+
+    [RelayCommand]
+    private void MarkImagedToday()
+    {
+        if (Source == null || AnnotationService == null) return;
+        AnnotationService.SetImaged(Source.AnnotationKey, DateOnly.FromDateTime(DateTime.Today));
+        Source.NotifyAnnotationChanged();
+        NotifyAnnotationProperties();
+    }
+
+    [RelayCommand]
+    private void ClearImaged()
+    {
+        if (Source == null || AnnotationService == null) return;
+        AnnotationService.SetImaged(Source.AnnotationKey, null);
+        Source.NotifyAnnotationChanged();
+        NotifyAnnotationProperties();
+    }
+
+    // ── Stellarium ────────────────────────────────────────────────────────────
+
+    private string StellariumSearchTerm
+    {
+        get
+        {
+            if (Source?.DsoSource is DeepSkyObject dso)
+            {
+                if (dso.MessierNumber.HasValue) return $"M{dso.MessierNumber}";
+                if (!string.IsNullOrEmpty(dso.CommonName)) return dso.CommonName;
+                return dso.ShortName;
+            }
+            if (Source?.SolarSystemSource is SolarSystemObject ss) return ss.Name;
+            if (Source?.CometSource is CometObject comet) return comet.DisplayName;
+            return "";
+        }
+    }
+
+    [RelayCommand]
+    private async Task OpenInStellariumAsync()
+    {
+        if (StellariumService == null || Source == null) return;
+        var term = StellariumSearchTerm;
+        if (string.IsNullOrEmpty(term)) return;
+        await StellariumService.FocusObjectAsync(term);
+    }
 
     // Detail display properties
     public string DetailName     => Source?.PrimaryName ?? "";
@@ -285,6 +368,7 @@ public partial class ObjectDetailViewModel : ViewModelBase
 
         OnPropertyChanged(nameof(IsVisible));
         OnPropertyChanged(nameof(IsComet));
+        NotifyAnnotationProperties();
         OnPropertyChanged(nameof(DetailName));
         OnPropertyChanged(nameof(DetailCatalogs));
         OnPropertyChanged(nameof(DetailType));

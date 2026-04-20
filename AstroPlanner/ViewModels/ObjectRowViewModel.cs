@@ -81,6 +81,31 @@ public partial class ObjectRowViewModel : ObservableObject
         }
     }
 
+    private AnnotationService? _annotationService;
+    public AnnotationService? AnnotationService
+    {
+        get => _annotationService;
+        set { _annotationService = value; NotifyAnnotationChanged(); }
+    }
+
+    /// <summary>Stable key used to look up annotations in AppSettings.Annotations.</summary>
+    public string AnnotationKey =>
+        DsoSource?.Name ??
+        (SolarSystemSource != null ? $"ss:{SolarSystemSource.BodyType}" : null) ??
+        (CometSource != null ? $"comet:{CometSource.Designation}" : null) ??
+        "";
+
+    public bool IsFavorite      => _annotationService?.IsFavorite(AnnotationKey) ?? false;
+    public bool HasBeenImaged   => _annotationService?.GetImagedOn(AnnotationKey) != null;
+    public string ImagedOnDisplay => _annotationService?.GetImagedOn(AnnotationKey)?.ToString("yyyy-MM-dd") ?? "";
+
+    public void NotifyAnnotationChanged()
+    {
+        OnPropertyChanged(nameof(IsFavorite));
+        OnPropertyChanged(nameof(HasBeenImaged));
+        OnPropertyChanged(nameof(ImagedOnDisplay));
+    }
+
     public ObjectRowViewModel(DeepSkyObject dso)
     {
         DsoSource = dso;

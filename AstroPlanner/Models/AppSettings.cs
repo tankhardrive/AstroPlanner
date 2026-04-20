@@ -12,6 +12,10 @@ public class AppSettings
 
     public WeatherThresholds WeatherThresholds { get; set; } = new();
 
+    public Dictionary<string, ObjectAnnotation> Annotations { get; set; } = [];
+
+    public string StellariumUrl { get; set; } = "http://localhost:8090";
+
     /// <summary>
     /// When true, the sky-quality factor (from Bortle class) is multiplied into the Score column.
     /// When false, sky quality is shown only in the separate Sky column.

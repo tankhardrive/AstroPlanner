@@ -26,6 +26,22 @@ public partial class PlannerViewModel : ViewModelBase
         }
     }
 
+    private AnnotationService? _annotationService;
+    public AnnotationService? AnnotationService
+    {
+        get => _annotationService;
+        set
+        {
+            if (_annotationService != null) _annotationService.AnnotationsChanged -= OnAnnotationsChanged;
+            _annotationService = value;
+            if (_annotationService != null) _annotationService.AnnotationsChanged += OnAnnotationsChanged;
+            foreach (var row in _allRows) row.AnnotationService = value;
+        }
+    }
+
+    private void OnAnnotationsChanged() =>
+        Avalonia.Threading.Dispatcher.UIThread.Post(ApplyFilterAndSort);
+
     [ObservableProperty] private ObservableCollection<ObjectRowViewModel> _displayRows = [];
     [ObservableProperty] private ObjectRowViewModel? _selectedRow;
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsNotCalculating))]
@@ -54,6 +70,12 @@ public partial class PlannerViewModel : ViewModelBase
     private bool _onlyVisible = false;
 
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasActiveFilters))]
+    private bool _onlyFavorites = false;
+
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasActiveFilters))]
+    private bool _hideImaged = false;
+
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasActiveFilters))]
     private decimal _minDurationHours = 0;
 
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasActiveFilters))]
@@ -78,7 +100,7 @@ public partial class PlannerViewModel : ViewModelBase
 
     public bool HasActiveFilters =>
         !ShowGalaxies || !ShowClusters || !ShowNebulae || !ShowPlanets || !ShowComets ||
-        ShowStars || OnlyVisible ||
+        ShowStars || OnlyVisible || OnlyFavorites || HideImaged ||
         MinDurationHours > 0 || MaxMagnitude < 14 ||
         !ShowMessier || !ShowCaldwell || !ShowNgc || !ShowIc ||
         SelectedConstellation != "All" ||
@@ -118,9 +140,9 @@ public partial class PlannerViewModel : ViewModelBase
         var planets = SolarSystemObject.CreateDefaults();
         var cometList = _comets.GetAll();
 
-        _allRows = dsObjects.Select(d => new ObjectRowViewModel(d) { Setups = _setups })
-            .Concat(planets.Select(p => new ObjectRowViewModel(p) { Setups = _setups }))
-            .Concat(cometList.Select(c => new ObjectRowViewModel(c) { Setups = _setups }))
+        _allRows = dsObjects.Select(d => new ObjectRowViewModel(d) { Setups = _setups, AnnotationService = _annotationService })
+            .Concat(planets.Select(p => new ObjectRowViewModel(p) { Setups = _setups, AnnotationService = _annotationService }))
+            .Concat(cometList.Select(c => new ObjectRowViewModel(c) { Setups = _setups, AnnotationService = _annotationService }))
             .ToList();
 
         var consts = new List<string> { "All" };
@@ -138,7 +160,7 @@ public partial class PlannerViewModel : ViewModelBase
     private void RebuildCometRows()
     {
         _allRows = _allRows.Where(r => r.CometSource == null).ToList();
-        _allRows.AddRange(_comets.GetAll().Select(c => new ObjectRowViewModel(c) { Setups = _setups }));
+        _allRows.AddRange(_comets.GetAll().Select(c => new ObjectRowViewModel(c) { Setups = _setups, AnnotationService = _annotationService }));
         ApplyFilterAndSort();
     }
 
@@ -301,6 +323,12 @@ public partial class PlannerViewModel : ViewModelBase
         if (OnlyVisible)
             filtered = filtered.Where(r => r.Visibility.IsVisible);
 
+        // Annotation filters
+        if (OnlyFavorites)
+            filtered = filtered.Where(r => r.IsFavorite);
+        if (HideImaged)
+            filtered = filtered.Where(r => !r.HasBeenImaged);
+
         // Min duration
         if (MinDurationHours > 0)
             filtered = filtered.Where(r => r.SortDuration >= (double)(MinDurationHours * 60));
@@ -375,11 +403,40 @@ public partial class PlannerViewModel : ViewModelBase
         ShowGalaxies = ShowClusters = ShowNebulae = ShowPlanets = ShowComets = true;
         ShowStars = false;
         OnlyVisible = false;
+        OnlyFavorites = false;
+        HideImaged = false;
         MinDurationHours = 0m;
         MaxMagnitude = 14m;
         ShowMessier = ShowCaldwell = ShowNgc = ShowIc = true;
         SelectedConstellation = "All";
         ApplyFilterAndSort();
+    }
+
+    // ── Annotation commands ───────────────────────────────────────────────────
+
+    [RelayCommand]
+    private void ToggleFavorite()
+    {
+        if (SelectedRow == null || _annotationService == null) return;
+        _annotationService.SetFavorite(SelectedRow.AnnotationKey,
+            !_annotationService.IsFavorite(SelectedRow.AnnotationKey));
+        SelectedRow.NotifyAnnotationChanged();
+    }
+
+    [RelayCommand]
+    private void MarkImagedToday()
+    {
+        if (SelectedRow == null || _annotationService == null) return;
+        _annotationService.SetImaged(SelectedRow.AnnotationKey, DateOnly.FromDateTime(DateTime.Today));
+        SelectedRow.NotifyAnnotationChanged();
+    }
+
+    [RelayCommand]
+    private void ClearImaged()
+    {
+        if (SelectedRow == null || _annotationService == null) return;
+        _annotationService.SetImaged(SelectedRow.AnnotationKey, null);
+        SelectedRow.NotifyAnnotationChanged();
     }
 
     // Filter helper predicates
@@ -395,6 +452,8 @@ public partial class PlannerViewModel : ViewModelBase
         or ObjectType.BrightNebula or ObjectType.Nebula;
 
     // Property change handlers to re-filter live
+    partial void OnOnlyFavoritesChanged(bool value) => ApplyFilterAndSort();
+    partial void OnHideImagedChanged(bool value) => ApplyFilterAndSort();
     partial void OnSearchTextChanged(string value) => ApplyFilterAndSort();
     partial void OnShowGalaxiesChanged(bool value) => ApplyFilterAndSort();
     partial void OnShowClustersChanged(bool value) => ApplyFilterAndSort();
