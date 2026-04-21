@@ -16,7 +16,10 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly CometService _cometService = new();
     private readonly StellariumService _stellariumService = new();
     private AnnotationService _annotationService = null!;
+    private YearlyVisibilityService _yearlyService = null!;
     private AppSettings _settings;
+
+    [ObservableProperty] private int _activeTabIndex;
 
     public PlannerViewModel Planner { get; }
     public ObjectDetailViewModel Detail { get; }
@@ -75,6 +78,7 @@ public partial class MainWindowViewModel : ViewModelBase
         var catalog = new CatalogService();
         var visibility = new VisibilityService();
         var images = new ImageService();
+        _yearlyService = new YearlyVisibilityService(visibility);
 
         Planner      = new PlannerViewModel(catalog, visibility, _cometService);
         Detail       = new ObjectDetailViewModel(images, visibility);
@@ -148,7 +152,9 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private async Task CalculateAsync()
+    private Task CalculateAsync() => RunCalculateAsync();
+
+    private async Task RunCalculateAsync()
     {
         var date = DateOnly.FromDateTime(ObservingDate ?? DateTime.Today);
         var loc = _settings.GetActiveLocation();
@@ -161,9 +167,20 @@ public partial class MainWindowViewModel : ViewModelBase
         Planner.SetApplySkyToScore(_settings.ApplySkyQualityToScore);
         UpdateMoonInfo();
 
-        // Auto-fetch Bortle class if not yet stored for this location
         if (loc.BortleClass == null)
             _ = FetchAndSaveBortleAsync();
+
+        // Kick off year computation in background (cancels any previous run)
+        _ = Planner.ComputeYearAsync(site, horizon, date.Year, _yearlyService);
+    }
+
+    public async Task NavigateToMonthAsync(int month)
+    {
+        if (month < 1 || month > 12) return;
+        int year = (ObservingDate ?? DateTime.Today).Year;
+        ObservingDate = new DateTime(year, month, 15);
+        ActiveTabIndex = 0;
+        await RunCalculateAsync();
     }
 
     private async Task FetchAndSaveBortleAsync()

@@ -15,9 +15,10 @@ public partial class MainWindow : Window
         {
             if (DataContext is MainWindowViewModel vm)
             {
-                PlannerViewControl.DataContext = vm.Planner;
-                DetailViewControl.DataContext  = vm.Detail;
-                SettingsViewControl.DataContext = vm.Settings;
+                PlannerViewControl.DataContext    = vm.Planner;
+                DetailViewControl.DataContext     = vm.Detail;
+                SettingsViewControl.DataContext   = vm.Settings;
+                YearPlannerViewControl.DataContext = vm.Planner;
             }
         };
     }

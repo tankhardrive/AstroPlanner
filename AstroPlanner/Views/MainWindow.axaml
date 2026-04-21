@@ -102,23 +102,36 @@
         <!-- ── Main content area ── -->
         <Grid>
 
-            <!-- Planner + detail side-by-side (hidden while settings open) -->
-            <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding IsNotShowSettings}">
+            <!-- Tab control (hidden while settings open) -->
+            <TabControl SelectedIndex="{Binding ActiveTabIndex}"
+                        IsVisible="{Binding IsNotShowSettings}">
 
-                <!-- Object list (PlannerView DataContext set in code-behind) -->
-                <views:PlannerView Grid.Column="0" x:Name="PlannerViewControl"/>
+                <!-- Tab 1: Planner -->
+                <TabItem Header="Planner">
+                    <Grid ColumnDefinitions="*,Auto">
 
-                <!-- Detail panel (shown when an object is selected) -->
-                <Border Grid.Column="1"
-                        Width="320"
-                        IsVisible="{Binding Detail.IsVisible}"
-                        BorderThickness="1,0,0,0"
-                        BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}">
-                    <!-- ObjectDetailView DataContext set in code-behind -->
-                    <views:ObjectDetailView x:Name="DetailViewControl"/>
-                </Border>
+                        <!-- Object list (PlannerView DataContext set in code-behind) -->
+                        <views:PlannerView Grid.Column="0" x:Name="PlannerViewControl"/>
 
-            </Grid>
+                        <!-- Detail panel (shown when an object is selected) -->
+                        <Border Grid.Column="1"
+                                Width="360"
+                                IsVisible="{Binding Detail.IsVisible}"
+                                BorderThickness="1,0,0,0"
+                                BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}">
+                            <!-- ObjectDetailView DataContext set in code-behind -->
+                            <views:ObjectDetailView x:Name="DetailViewControl"/>
+                        </Border>
+
+                    </Grid>
+                </TabItem>
+
+                <!-- Tab 2: Year planner -->
+                <TabItem Header="Year">
+                    <views:YearPlannerView x:Name="YearPlannerViewControl"/>
+                </TabItem>
+
+            </TabControl>
 
             <!-- Settings panel — wrapper owns IsVisible so the DataContext swap on SettingsView
                  doesn't break the binding (DataContext set in code-behind on inner view only) -->

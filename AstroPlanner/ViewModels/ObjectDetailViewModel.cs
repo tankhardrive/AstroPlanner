@@ -94,6 +94,8 @@ public partial class ObjectDetailViewModel : ViewModelBase
         _visService = visService;
     }
 
+    private ObjectRowViewModel? _previousSource;
+
     public bool IsVisible => Source != null;
     public bool IsComet   => Source?.CometSource != null;
     public TimeZoneInfo ObservingTimeZone => Source?.TimeZone ?? TimeZoneInfo.Local;
@@ -255,6 +257,25 @@ public partial class ObjectDetailViewModel : ViewModelBase
         }
     }
 
+    // ── Year / seasonal data ─────────────────────────────────────────────────
+
+    public double[]? DetailMonthlyScores => Source?.MonthlyScores;
+    public string DetailBestSeasonText   => Source?.BestSeasonText ?? "—";
+    public bool HasYearData    => Source?.MonthlyScores != null;
+    public bool HasNoYearData  => Source != null && Source.MonthlyScores == null;
+
+    private void OnRowPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(ObjectRowViewModel.MonthlyScores)
+                           or nameof(ObjectRowViewModel.BestSeasonText))
+        {
+            OnPropertyChanged(nameof(DetailMonthlyScores));
+            OnPropertyChanged(nameof(DetailBestSeasonText));
+            OnPropertyChanged(nameof(HasYearData));
+            OnPropertyChanged(nameof(HasNoYearData));
+        }
+    }
+
     // ── AstroBin ──────────────────────────────────────────────────────────────
 
     private string AstroBinSearchTerm
@@ -351,6 +372,10 @@ public partial class ObjectDetailViewModel : ViewModelBase
 
     partial void OnSourceChanged(ObjectRowViewModel? value)
     {
+        if (_previousSource != null) _previousSource.PropertyChanged -= OnRowPropertyChanged;
+        _previousSource = value;
+        if (value != null) value.PropertyChanged += OnRowPropertyChanged;
+
         // Ensure comet position and magnitude are available for display
         // even if the user hasn't pressed Calculate yet.
         if (value?.CometSource is CometObject comet)
@@ -404,6 +429,10 @@ public partial class ObjectDetailViewModel : ViewModelBase
         OnPropertyChanged(nameof(BreakSky));
         OnPropertyChanged(nameof(BreakSkyFill));
         OnPropertyChanged(nameof(BreakTotal));
+        OnPropertyChanged(nameof(DetailMonthlyScores));
+        OnPropertyChanged(nameof(DetailBestSeasonText));
+        OnPropertyChanged(nameof(HasYearData));
+        OnPropertyChanged(nameof(HasNoYearData));
 
         _imageCts?.Cancel();
         _imagesBySource.Clear();

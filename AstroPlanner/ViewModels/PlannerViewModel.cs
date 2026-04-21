@@ -49,6 +49,13 @@ public partial class PlannerViewModel : ViewModelBase
     public bool IsNotCalculating => !IsCalculating;
     [ObservableProperty] private double _calculationProgress;
     [ObservableProperty] private string _statusText = "Load a catalog to begin.";
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsNotYearComputing))]
+    private bool _isYearComputing;
+    public bool IsNotYearComputing => !IsYearComputing;
+    [ObservableProperty] private double _yearProgress;
+    [ObservableProperty] private string _yearLabel = "";
+
+    private CancellationTokenSource? _yearCts;
 
     // ── Filters ───────────────────────────────────────────────────────────────
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasActiveFilters))]
@@ -258,6 +265,34 @@ public partial class PlannerViewModel : ViewModelBase
 
     private bool CanCalculate() => !IsCalculating;
 
+    // ── Year computation ──────────────────────────────────────────────────────
+
+    public async Task ComputeYearAsync(
+        ObservationSite site, HorizonProfile horizon, int year,
+        YearlyVisibilityService yearService)
+    {
+        _yearCts?.Cancel();
+        _yearCts = new CancellationTokenSource();
+
+        IsYearComputing = true;
+        YearProgress    = 0;
+        YearLabel       = $"Year: {year}";
+
+        try
+        {
+            var dsoRows = _allRows.Where(r => r.DsoSource != null).ToList();
+            var prog = new Progress<double>(p =>
+                Avalonia.Threading.Dispatcher.UIThread.Post(() => YearProgress = p));
+            await yearService.ComputeAsync(dsoRows, site, horizon, year, prog, _yearCts.Token);
+        }
+        catch (OperationCanceledException) { }
+        finally
+        {
+            IsYearComputing = false;
+            YearProgress    = 0;
+        }
+    }
+
     // ── Filter & Sort ─────────────────────────────────────────────────────────
 
     [RelayCommand]
@@ -349,9 +384,22 @@ public partial class PlannerViewModel : ViewModelBase
                 "MoonSep"   => filtered.OrderBy(r => r.SortMoonSep),
                 "Score"      => filtered.OrderBy(r => r.SortScore),
                 "SkyQuality" => filtered.OrderBy(r => r.SortSkyQuality),
-                "Perihelion" => filtered.OrderBy(r => r.SortPerihelion),
-                "BestSetup"  => filtered.OrderBy(r => r.SortBestFill),
-                "VisStart"  => filtered.OrderBy(r => r.Visibility.RiseTime ?? DateTime.MaxValue),
+                "Perihelion"    => filtered.OrderBy(r => r.SortPerihelion),
+                "BestSetup"     => filtered.OrderBy(r => r.SortBestFill),
+                "VisStart"      => filtered.OrderBy(r => r.Visibility.RiseTime ?? DateTime.MaxValue),
+                "PeakMonthScore"=> filtered.OrderBy(r => r.PeakMonthScore),
+                "ScoreJan"  => filtered.OrderBy(r => r.ScoreJan),
+                "ScoreFeb"  => filtered.OrderBy(r => r.ScoreFeb),
+                "ScoreMar"  => filtered.OrderBy(r => r.ScoreMar),
+                "ScoreApr"  => filtered.OrderBy(r => r.ScoreApr),
+                "ScoreMay"  => filtered.OrderBy(r => r.ScoreMay),
+                "ScoreJun"  => filtered.OrderBy(r => r.ScoreJun),
+                "ScoreJul"  => filtered.OrderBy(r => r.ScoreJul),
+                "ScoreAug"  => filtered.OrderBy(r => r.ScoreAug),
+                "ScoreSep"  => filtered.OrderBy(r => r.ScoreSep),
+                "ScoreOct"  => filtered.OrderBy(r => r.ScoreOct),
+                "ScoreNov"  => filtered.OrderBy(r => r.ScoreNov),
+                "ScoreDec"  => filtered.OrderBy(r => r.ScoreDec),
                 _           => filtered.OrderBy(r => r.SortDuration),
             };
         }
@@ -369,9 +417,22 @@ public partial class PlannerViewModel : ViewModelBase
                 "MoonSep"   => filtered.OrderByDescending(r => r.SortMoonSep),
                 "Score"      => filtered.OrderByDescending(r => r.SortScore),
                 "SkyQuality" => filtered.OrderByDescending(r => r.SortSkyQuality),
-                "Perihelion" => filtered.OrderByDescending(r => r.SortPerihelion),
-                "BestSetup"  => filtered.OrderByDescending(r => r.SortBestFill),
-                "VisStart"  => filtered.OrderByDescending(r => r.Visibility.RiseTime ?? DateTime.MinValue),
+                "Perihelion"    => filtered.OrderByDescending(r => r.SortPerihelion),
+                "BestSetup"     => filtered.OrderByDescending(r => r.SortBestFill),
+                "VisStart"      => filtered.OrderByDescending(r => r.Visibility.RiseTime ?? DateTime.MinValue),
+                "PeakMonthScore"=> filtered.OrderByDescending(r => r.PeakMonthScore),
+                "ScoreJan"  => filtered.OrderByDescending(r => r.ScoreJan),
+                "ScoreFeb"  => filtered.OrderByDescending(r => r.ScoreFeb),
+                "ScoreMar"  => filtered.OrderByDescending(r => r.ScoreMar),
+                "ScoreApr"  => filtered.OrderByDescending(r => r.ScoreApr),
+                "ScoreMay"  => filtered.OrderByDescending(r => r.ScoreMay),
+                "ScoreJun"  => filtered.OrderByDescending(r => r.ScoreJun),
+                "ScoreJul"  => filtered.OrderByDescending(r => r.ScoreJul),
+                "ScoreAug"  => filtered.OrderByDescending(r => r.ScoreAug),
+                "ScoreSep"  => filtered.OrderByDescending(r => r.ScoreSep),
+                "ScoreOct"  => filtered.OrderByDescending(r => r.ScoreOct),
+                "ScoreNov"  => filtered.OrderByDescending(r => r.ScoreNov),
+                "ScoreDec"  => filtered.OrderByDescending(r => r.ScoreDec),
                 _           => filtered.OrderByDescending(r => r.SortDuration),
             };
         }

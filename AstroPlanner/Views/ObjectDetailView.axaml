@@ -246,6 +246,24 @@
 
             </StackPanel>
 
+            <!-- Year / seasonal data -->
+            <StackPanel Margin="12,8,12,10" Spacing="6" IsVisible="{Binding HasYearData}">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Grid.Column="0" Text="Best Season" FontSize="11" Opacity="0.6"/>
+                    <TextBlock Grid.Column="1" Text="{Binding DetailBestSeasonText}"
+                               FontSize="11" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                </Grid>
+                <controls:MonthScoreBarsControl
+                    Scores="{Binding DetailMonthlyScores}"
+                    Height="62"/>
+            </StackPanel>
+
+            <!-- Placeholder shown before year data has been computed -->
+            <TextBlock Margin="12,6,12,6"
+                       Text="Seasonal data available after Calculate."
+                       FontSize="11" Opacity="0.35" FontStyle="Italic"
+                       IsVisible="{Binding HasNoYearData}"/>
+
             <Separator Margin="8,0"/>
 
             <!-- Imaging setups breakdown -->

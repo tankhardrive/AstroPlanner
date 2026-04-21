@@ -395,6 +395,74 @@ public partial class ObjectRowViewModel : ObservableObject
         ? Math.Abs(DaysToPerihelion())
         : double.MaxValue;
 
+    // ── Yearly / seasonal scores ─────────────────────────────────────────────
+
+    public double[]? MonthlyScores { get; set; }
+
+    public double ScoreJan => MonthlyScores?[0]  ?? 0;
+    public double ScoreFeb => MonthlyScores?[1]  ?? 0;
+    public double ScoreMar => MonthlyScores?[2]  ?? 0;
+    public double ScoreApr => MonthlyScores?[3]  ?? 0;
+    public double ScoreMay => MonthlyScores?[4]  ?? 0;
+    public double ScoreJun => MonthlyScores?[5]  ?? 0;
+    public double ScoreJul => MonthlyScores?[6]  ?? 0;
+    public double ScoreAug => MonthlyScores?[7]  ?? 0;
+    public double ScoreSep => MonthlyScores?[8]  ?? 0;
+    public double ScoreOct => MonthlyScores?[9]  ?? 0;
+    public double ScoreNov => MonthlyScores?[10] ?? 0;
+    public double ScoreDec => MonthlyScores?[11] ?? 0;
+
+    public double PeakMonthScore => MonthlyScores?.Max() ?? 0;
+
+    private static readonly string[] MonthAbbr =
+        ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+    public string BestSeasonText
+    {
+        get
+        {
+            if (MonthlyScores == null) return "—";
+            double peak = MonthlyScores.Max();
+            if (peak < 5) return "Not visible from this location";
+
+            int peakIdx = Array.IndexOf(MonthlyScores, peak);
+            if (peak < 15) return $"Best: {MonthAbbr[peakIdx]}  ({peak:F0} pts)";
+
+            // Expand from peak month while score >= relative threshold
+            double threshold = Math.Max(15, peak * 0.35);
+            int start = peakIdx, end = peakIdx;
+            for (int i = 0; i < 11; i++)
+            {
+                int prev = (start - 1 + 12) % 12;
+                if (prev == end || MonthlyScores[prev] < threshold) break;
+                start = prev;
+            }
+            for (int i = 0; i < 11; i++)
+            {
+                int next = (end + 1) % 12;
+                if (next == start || MonthlyScores[next] < threshold) break;
+                end = next;
+            }
+
+            return start == end
+                ? $"Best: {MonthAbbr[start]}  ({peak:F0} pts)"
+                : $"Best: {MonthAbbr[start]} – {MonthAbbr[end]}  (peak {MonthAbbr[peakIdx]} · {peak:F0} pts)";
+        }
+    }
+
+    public void NotifyYearScoresChanged()
+    {
+        OnPropertyChanged(nameof(MonthlyScores));
+        OnPropertyChanged(nameof(ScoreJan));  OnPropertyChanged(nameof(ScoreFeb));
+        OnPropertyChanged(nameof(ScoreMar));  OnPropertyChanged(nameof(ScoreApr));
+        OnPropertyChanged(nameof(ScoreMay));  OnPropertyChanged(nameof(ScoreJun));
+        OnPropertyChanged(nameof(ScoreJul));  OnPropertyChanged(nameof(ScoreAug));
+        OnPropertyChanged(nameof(ScoreSep));  OnPropertyChanged(nameof(ScoreOct));
+        OnPropertyChanged(nameof(ScoreNov));  OnPropertyChanged(nameof(ScoreDec));
+        OnPropertyChanged(nameof(PeakMonthScore));
+        OnPropertyChanged(nameof(BestSeasonText));
+    }
+
     // Sort keys (numeric, for ViewModel sorting)
     public double SortDuration  => Visibility.Duration.TotalMinutes;
     public double SortMag       => Magnitude ?? 99;

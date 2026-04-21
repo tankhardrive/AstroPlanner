@@ -48,3 +48,6 @@ build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
 [/home/nhartmann/RiderProjects/AstroPlanner/AstroPlanner/Views/WeatherDetailWindow.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[/home/nhartmann/RiderProjects/AstroPlanner/AstroPlanner/Views/YearPlannerView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml

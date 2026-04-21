@@ -1,0 +1,228 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AstroPlanner.ViewModels"
+             xmlns:conv="using:AstroPlanner.Converters"
+             x:Class="AstroPlanner.Views.YearPlannerView"
+             x:DataType="vm:PlannerViewModel">
+
+    <UserControl.Resources>
+        <conv:ScoreToColorConverter   x:Key="ScoreColor"/>
+        <conv:ScoreToDisplayConverter x:Key="ScoreDisplay"/>
+    </UserControl.Resources>
+
+    <DockPanel>
+
+        <!-- ── Header bar ── -->
+        <Border DockPanel.Dock="Top"
+                Padding="10,6"
+                BorderThickness="0,0,0,1"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}">
+            <Grid ColumnDefinitions="Auto,12,Auto,*,Auto">
+
+                <TextBlock Grid.Column="0"
+                           Text="Year Planner"
+                           FontSize="13" FontWeight="SemiBold"
+                           VerticalAlignment="Center"/>
+
+                <TextBlock Grid.Column="2"
+                           Text="{Binding YearLabel}"
+                           FontSize="12" Opacity="0.6"
+                           VerticalAlignment="Center"/>
+
+                <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="10"
+                            VerticalAlignment="Center">
+                    <ProgressBar Value="{Binding YearProgress}"
+                                 Maximum="100"
+                                 Width="120" Height="6"
+                                 IsVisible="{Binding IsYearComputing}"/>
+                    <TextBlock Text="Computing year data…"
+                               FontSize="11" Opacity="0.6"
+                               IsVisible="{Binding IsYearComputing}"
+                               VerticalAlignment="Center"/>
+                    <TextBlock Text="Click a month cell to jump to that date and recalculate."
+                               FontSize="11" Opacity="0.45"
+                               IsVisible="{Binding IsNotYearComputing}"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+
+            </Grid>
+        </Border>
+
+        <!-- ── Year heatmap DataGrid ── -->
+        <DataGrid ItemsSource="{Binding DisplayRows}"
+                  AutoGenerateColumns="False"
+                  CanUserSortColumns="True"
+                  CanUserResizeColumns="True"
+                  IsReadOnly="True"
+                  GridLinesVisibility="None"
+                  Sorting="OnYearGridSorting"
+                  CurrentCellChanged="OnYearGridCurrentCellChanged"
+                  x:Name="YearGrid">
+
+            <DataGrid.Columns>
+
+                <DataGridTextColumn Header="Name"
+                                    Binding="{Binding PrimaryName}"
+                                    Width="210" SortMemberPath="PrimaryName"/>
+
+                <DataGridTemplateColumn Header="Jan" Width="120" SortMemberPath="ScoreJan" CanUserSort="True">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:ObjectRowViewModel">
+                            <Border Background="{Binding ScoreJan, Converter={StaticResource ScoreColor}}"
+                                    ToolTip.Tip="{Binding ScoreJan, Converter={StaticResource ScoreDisplay}}">
+                                <TextBlock Text="{Binding ScoreJan, Converter={StaticResource ScoreDisplay}}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           FontSize="11" Foreground="White" Opacity="0.85"/>
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Feb" Width="120" SortMemberPath="ScoreFeb" CanUserSort="True">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:ObjectRowViewModel">
+                            <Border Background="{Binding ScoreFeb, Converter={StaticResource ScoreColor}}"
+                                    ToolTip.Tip="{Binding ScoreFeb, Converter={StaticResource ScoreDisplay}}">
+                                <TextBlock Text="{Binding ScoreFeb, Converter={StaticResource ScoreDisplay}}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           FontSize="11" Foreground="White" Opacity="0.85"/>
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Mar" Width="120" SortMemberPath="ScoreMar" CanUserSort="True">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:ObjectRowViewModel">
+                            <Border Background="{Binding ScoreMar, Converter={StaticResource ScoreColor}}"
+                                    ToolTip.Tip="{Binding ScoreMar, Converter={StaticResource ScoreDisplay}}">
+                                <TextBlock Text="{Binding ScoreMar, Converter={StaticResource ScoreDisplay}}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           FontSize="11" Foreground="White" Opacity="0.85"/>
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Apr" Width="120" SortMemberPath="ScoreApr" CanUserSort="True">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:ObjectRowViewModel">
+                            <Border Background="{Binding ScoreApr, Converter={StaticResource ScoreColor}}"
+                                    ToolTip.Tip="{Binding ScoreApr, Converter={StaticResource ScoreDisplay}}">
+                                <TextBlock Text="{Binding ScoreApr, Converter={StaticResource ScoreDisplay}}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           FontSize="11" Foreground="White" Opacity="0.85"/>
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="May" Width="120" SortMemberPath="ScoreMay" CanUserSort="True">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:ObjectRowViewModel">
+                            <Border Background="{Binding ScoreMay, Converter={StaticResource ScoreColor}}"
+                                    ToolTip.Tip="{Binding ScoreMay, Converter={StaticResource ScoreDisplay}}">
+                                <TextBlock Text="{Binding ScoreMay, Converter={StaticResource ScoreDisplay}}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           FontSize="11" Foreground="White" Opacity="0.85"/>
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Jun" Width="120" SortMemberPath="ScoreJun" CanUserSort="True">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:ObjectRowViewModel">
+                            <Border Background="{Binding ScoreJun, Converter={StaticResource ScoreColor}}"
+                                    ToolTip.Tip="{Binding ScoreJun, Converter={StaticResource ScoreDisplay}}">
+                                <TextBlock Text="{Binding ScoreJun, Converter={StaticResource ScoreDisplay}}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           FontSize="11" Foreground="White" Opacity="0.85"/>
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Jul" Width="120" SortMemberPath="ScoreJul" CanUserSort="True">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:ObjectRowViewModel">
+                            <Border Background="{Binding ScoreJul, Converter={StaticResource ScoreColor}}"
+                                    ToolTip.Tip="{Binding ScoreJul, Converter={StaticResource ScoreDisplay}}">
+                                <TextBlock Text="{Binding ScoreJul, Converter={StaticResource ScoreDisplay}}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           FontSize="11" Foreground="White" Opacity="0.85"/>
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Aug" Width="120" SortMemberPath="ScoreAug" CanUserSort="True">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:ObjectRowViewModel">
+                            <Border Background="{Binding ScoreAug, Converter={StaticResource ScoreColor}}"
+                                    ToolTip.Tip="{Binding ScoreAug, Converter={StaticResource ScoreDisplay}}">
+                                <TextBlock Text="{Binding ScoreAug, Converter={StaticResource ScoreDisplay}}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           FontSize="11" Foreground="White" Opacity="0.85"/>
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Sep" Width="120" SortMemberPath="ScoreSep" CanUserSort="True">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:ObjectRowViewModel">
+                            <Border Background="{Binding ScoreSep, Converter={StaticResource ScoreColor}}"
+                                    ToolTip.Tip="{Binding ScoreSep, Converter={StaticResource ScoreDisplay}}">
+                                <TextBlock Text="{Binding ScoreSep, Converter={StaticResource ScoreDisplay}}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           FontSize="11" Foreground="White" Opacity="0.85"/>
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Oct" Width="120" SortMemberPath="ScoreOct" CanUserSort="True">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:ObjectRowViewModel">
+                            <Border Background="{Binding ScoreOct, Converter={StaticResource ScoreColor}}"
+                                    ToolTip.Tip="{Binding ScoreOct, Converter={StaticResource ScoreDisplay}}">
+                                <TextBlock Text="{Binding ScoreOct, Converter={StaticResource ScoreDisplay}}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           FontSize="11" Foreground="White" Opacity="0.85"/>
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Nov" Width="120" SortMemberPath="ScoreNov" CanUserSort="True">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:ObjectRowViewModel">
+                            <Border Background="{Binding ScoreNov, Converter={StaticResource ScoreColor}}"
+                                    ToolTip.Tip="{Binding ScoreNov, Converter={StaticResource ScoreDisplay}}">
+                                <TextBlock Text="{Binding ScoreNov, Converter={StaticResource ScoreDisplay}}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           FontSize="11" Foreground="White" Opacity="0.85"/>
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Dec" Width="120" SortMemberPath="ScoreDec" CanUserSort="True">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:ObjectRowViewModel">
+                            <Border Background="{Binding ScoreDec, Converter={StaticResource ScoreColor}}"
+                                    ToolTip.Tip="{Binding ScoreDec, Converter={StaticResource ScoreDisplay}}">
+                                <TextBlock Text="{Binding ScoreDec, Converter={StaticResource ScoreDisplay}}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           FontSize="11" Foreground="White" Opacity="0.85"/>
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+            </DataGrid.Columns>
+        </DataGrid>
+
+    </DockPanel>
+</UserControl>
