@@ -6,6 +6,7 @@
   [![Release](https://img.shields.io/github/v/release/tankhardrive/AstroPlanner)](https://github.com/tankhardrive/AstroPlanner/releases/latest)
   [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue)](#download)
   [![.NET](https://img.shields.io/badge/.NET-10-purple)](https://dotnet.microsoft.com)
+  [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 </div>
 
 ---
