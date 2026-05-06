@@ -10,6 +10,24 @@
 
 ---
 
+## Screenshots
+
+<div align="center">
+  <img src="screenshots/planner.png" alt="Main planner view" width="800"/>
+  <br/><em>Horizon-aware object list with visibility scores</em>
+  <br/><br/>
+  <img src="screenshots/detail.png" alt="Object detail panel" width="800"/>
+  <br/><em>Object detail — altitude plot, moon info, and imaging log</em>
+  <br/><br/>
+  <img src="screenshots/fov.png" alt="FOV Preview" width="800"/>
+  <br/><em>Interactive FOV preview on real DSS imagery</em>
+  <br/><br/>
+  <img src="screenshots/yearly.png" alt="Yearly visibility view" width="800"/>
+  <br/><em>Yearly best-time heatmap</em>
+</div>
+
+---
+
 ## What it does
 
 AstroPlanner tells you **what's worth observing tonight** and exactly how long you have to observe it. It loads the full NGC/IC/Messier/Caldwell catalog, computes each object's altitude throughout the night against your custom horizon profile, and scores every object based on how long it clears your horizon and your local sky conditions. Point it at a night, pick your location, and it hands you a ranked list you can actually trust.
