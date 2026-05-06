@@ -19,7 +19,7 @@
   <img src="screenshots/detail.png" alt="Object detail panel" width="800"/>
   <br/><em>Object detail — altitude plot, moon info, and imaging log</em>
   <br/><br/>
-  <img src="screenshots/fov.png" alt="FOV Preview" width="800"/>
+  <img src="screenshots/remote.png" alt="FOV Preview" width="800"/>
   <br/><em>Interactive FOV preview on real DSS imagery</em>
   <br/><br/>
   <img src="screenshots/yearly.png" alt="Yearly visibility view" width="800"/>
