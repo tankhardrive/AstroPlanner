@@ -101,6 +101,12 @@ public static class AladinHtmlBuilder
                 {{legendRows}}
             </div>
             <script>
+            window.onerror = function(msg, src, line) {
+                var d = document.getElementById('aladin-lite-div');
+                if (d) d.innerHTML = '<pre style="color:#f66;padding:20px;font-size:12px;white-space:pre-wrap">JS Error: ' + msg + '\n' + src + ':' + line + '</pre>';
+                return false;
+            };
+
             const CENTER_RA  = {{F(ra)}};
             const CENTER_DEC = {{F(dec)}};
             const SETUPS = [{{setupsJs}}];
@@ -139,22 +145,30 @@ public static class AladinHtmlBuilder
                 });
             }
 
-            A.init.then(() => {
-                aladinInst = A.aladin('#aladin-lite-div', {
-                    survey:               'P/DSS2/color',
-                    fov:                  {{F(fovDeg)}},
-                    showReticle:          false,
-                    showZoomControl:      true,
-                    showFullscreenControl:false,
-                    showLayersControl:    true,
-                    showGotoControl:      false,
-                    showFrame:            false,
-                    showCooGrid:          false,
-                    backgroundColor:      '#000000',
+            if (typeof A === 'undefined') {
+                document.getElementById('aladin-lite-div').innerHTML =
+                    '<pre style="color:#f66;padding:20px;font-size:12px">Aladin JS failed to load. Check network connectivity.</pre>';
+            } else {
+                A.init.then(() => {
+                    aladinInst = A.aladin('#aladin-lite-div', {
+                        survey:               'P/DSS2/color',
+                        fov:                  {{F(fovDeg)}},
+                        showReticle:          false,
+                        showZoomControl:      true,
+                        showFullscreenControl:false,
+                        showLayersControl:    true,
+                        showGotoControl:      false,
+                        showFrame:            false,
+                        showCooGrid:          false,
+                        backgroundColor:      '#000000',
+                    });
+                    aladinInst.gotoRaDec(CENTER_RA, CENTER_DEC);
+                    setRotation(0);
+                }).catch(err => {
+                    document.getElementById('aladin-lite-div').innerHTML =
+                        '<pre style="color:#f66;padding:20px;font-size:12px">Aladin init failed: ' + err + '</pre>';
                 });
-                aladinInst.gotoRaDec(CENTER_RA, CENTER_DEC);
-                setRotation(0);
-            });
+            }
             </script>
             </body>
             </html>

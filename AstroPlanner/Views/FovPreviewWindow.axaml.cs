@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
@@ -12,6 +13,7 @@ public partial class FovPreviewWindow : Window
 {
     // Guard against slider↔numeric circular updates
     private bool _syncingRotation;
+    private string? _tempHtmlFile;
 
     public FovPreviewWindow()
     {
@@ -32,8 +34,13 @@ public partial class FovPreviewWindow : Window
             Console.WriteLine($"[FOV] AdapterCreated, DataContext={DataContext?.GetType().Name ?? "null"}");
             if (DataContext is FovPreviewViewModel vm)
             {
-                Console.WriteLine("[FOV] Calling NavigateToString...");
-                WebView.NavigateToString(vm.HtmlContent, new Uri("https://aladin.cds.unistra.fr/"));
+                // NavigateToString's base URI is ignored by WebView2 on Windows, causing
+                // Aladin to fail to initialize from an opaque (about:blank) origin.
+                // Writing to a temp file and using Navigate avoids this on all platforms.
+                _tempHtmlFile = Path.Combine(Path.GetTempPath(), $"astroplanner_{Guid.NewGuid():N}.html");
+                File.WriteAllText(_tempHtmlFile, vm.HtmlContent, Encoding.UTF8);
+                Console.WriteLine($"[FOV] Navigating to temp file: {_tempHtmlFile}");
+                WebView.Navigate(new Uri(_tempHtmlFile));
             }
             else
             {
@@ -50,6 +57,12 @@ public partial class FovPreviewWindow : Window
                 Console.WriteLine("[FOV] Nudging size...");
                 NudgeSize();
             }, DispatcherPriority.Background);
+        };
+
+        this.Closed += (_, _) =>
+        {
+            if (_tempHtmlFile is { } path)
+                try { File.Delete(path); } catch { }
         };
 
         RotationSlider.ValueChanged  += OnSliderChanged;
