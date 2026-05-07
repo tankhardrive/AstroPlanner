@@ -88,8 +88,11 @@ Grab the latest build from the [Releases page](https://github.com/tankhardrive/A
 | **Astronomy math** | [AASharp](https://github.com/jsauve/AASharp) — port of Jean Meeus' *Astronomical Algorithms* |
 | **Sky viewer** | [Aladin Lite v3](https://aladin.cds.unistra.fr/AladinLite/) embedded via WebView |
 | **Catalog** | [OpenNGC](https://github.com/mattiaverga/OpenNGC) by Mattia Verga (bundled, [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)) |
+| **Object images** | [NASA SkyView](https://skyview.gsfc.nasa.gov) (DSS2) + [DESI Legacy Survey DR10](https://www.legacysurvey.org) |
+| **Comet data** | [Minor Planet Center](https://www.minorplanetcenter.net) (IAU) |
 | **Weather** | [Open-Meteo](https://open-meteo.com) + [7timer ASTRO](http://www.7timer.info) |
 | **Light pollution** | [lightpollutionmap.info](https://www.lightpollutionmap.info) |
+| **CSV parsing** | [CsvHelper](https://joshclose.github.io/CsvHelper/) by Josh Close |
 | **MVVM** | [CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet) |
 
 ---
