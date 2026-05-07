@@ -25,7 +25,7 @@ jobs:
         run: echo "version=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
 
       - name: Publish
-        run: dotnet publish AstroPlanner/AstroPlanner.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true
+        run: dotnet publish AstroPlanner/AstroPlanner.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:Version=${{ steps.ver.outputs.version }}
 
       - name: Build installer
         run: makensis /DAPP_VERSION=${{ steps.ver.outputs.version }} installer.nsi
@@ -52,7 +52,7 @@ jobs:
         run: brew install libicns imagemagick
 
       - name: Publish
-        run: dotnet publish AstroPlanner/AstroPlanner.csproj -c Release -r osx-x64 --self-contained -p:PublishSingleFile=true
+        run: dotnet publish AstroPlanner/AstroPlanner.csproj -c Release -r osx-x64 --self-contained -p:PublishSingleFile=true -p:Version=${{ steps.ver.outputs.version }}
 
       - name: Build app bundle
         run: bash build-macos.sh ${{ steps.ver.outputs.version }}
@@ -76,7 +76,7 @@ jobs:
         run: echo "version=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
 
       - name: Publish
-        run: dotnet publish AstroPlanner/AstroPlanner.csproj -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true
+        run: dotnet publish AstroPlanner/AstroPlanner.csproj -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true -p:Version=${{ steps.ver.outputs.version }}
 
       - name: Prepare AppDir
         run: |

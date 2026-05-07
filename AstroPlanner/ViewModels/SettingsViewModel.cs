@@ -24,6 +24,7 @@ public partial class SettingsViewModel : ViewModelBase
 {
     private readonly SettingsService _settingsService;
     private readonly CometService _cometService;
+    private readonly UpdateService _updateService;
     private AppSettings _settings;
 
     // ── Location list ────────────────────────────────────────────────────────
@@ -74,10 +75,11 @@ public partial class SettingsViewModel : ViewModelBase
 
     public event Action? SettingsSaved;
 
-    public SettingsViewModel(SettingsService settingsService, CometService cometService)
+    public SettingsViewModel(SettingsService settingsService, CometService cometService, UpdateService updateService)
     {
         _settingsService = settingsService;
         _cometService = cometService;
+        _updateService = updateService;
         _settings = settingsService.Load();
         StepMinutes           = (decimal)_settings.VisibilityStepMinutes;
         ApplySkyQualityToScore = _settings.ApplySkyQualityToScore;
@@ -379,6 +381,16 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty] private string _cometCacheMessage = "";
     [ObservableProperty] private bool _isRefreshingComets;
 
+    // ── Updates ──────────────────────────────────────────────────────────────
+    [ObservableProperty] private bool _updateAvailable;
+    [ObservableProperty] private bool _isCheckingUpdate;
+    [ObservableProperty] private bool _isInstallingUpdate;
+    [ObservableProperty] private string _updateStatusMessage = "";
+
+    private UpdateInfo? _pendingUpdate;
+
+    public string CurrentVersion => UpdateService.CurrentVersionString;
+
     [RelayCommand]
     private void ClearCometCache()
     {
@@ -408,6 +420,66 @@ public partial class SettingsViewModel : ViewModelBase
         finally
         {
             IsRefreshingComets = false;
+        }
+    }
+
+    // ── Update commands ───────────────────────────────────────────────────────
+
+    [RelayCommand]
+    private async Task CheckForUpdateAsync()
+    {
+        IsCheckingUpdate = true;
+        UpdateStatusMessage = "Checking…";
+        _pendingUpdate = await _updateService.CheckAsync();
+        if (_pendingUpdate != null)
+        {
+            var v = _pendingUpdate.LatestVersion;
+            var label = v.Build > 0 ? $"{v.Major}.{v.Minor}.{v.Build}" : $"{v.Major}.{v.Minor}";
+            UpdateStatusMessage = $"Update available: v{label}";
+            UpdateAvailable = true;
+        }
+        else
+        {
+            UpdateStatusMessage = "You're up to date.";
+            UpdateAvailable = false;
+        }
+        IsCheckingUpdate = false;
+    }
+
+    public async Task CheckSilentlyAsync()
+    {
+        _pendingUpdate = await _updateService.CheckAsync();
+        if (_pendingUpdate == null) return;
+        var v = _pendingUpdate.LatestVersion;
+        var label = v.Build > 0 ? $"{v.Major}.{v.Minor}.{v.Build}" : $"{v.Major}.{v.Minor}";
+        UpdateStatusMessage = $"Update available: v{label}";
+        UpdateAvailable = true;
+    }
+
+    [RelayCommand]
+    private async Task InstallUpdateAsync()
+    {
+        if (_pendingUpdate == null) return;
+        IsInstallingUpdate = true;
+
+        var progress = new Progress<int>(p => UpdateStatusMessage = $"Downloading… {p}%");
+        var result = await _updateService.DownloadAndInstallAsync(_pendingUpdate, progress);
+
+        IsInstallingUpdate = false;
+
+        switch (result)
+        {
+            case "restart":
+                UpdateStatusMessage = "Update installed — please restart AstroPlanner.";
+                UpdateAvailable = false;
+                break;
+            case "browser":
+                UpdateStatusMessage = "Browser opened — download and replace your app bundle.";
+                UpdateAvailable = false;
+                break;
+            case { } s when s.StartsWith("error:"):
+                UpdateStatusMessage = s["error:".Length..];
+                break;
         }
     }
 }

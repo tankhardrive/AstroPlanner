@@ -82,7 +82,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         Planner      = new PlannerViewModel(catalog, visibility, _cometService);
         Detail       = new ObjectDetailViewModel(images, visibility);
-        Settings     = new SettingsViewModel(_settingsService, _cometService);
+        Settings     = new SettingsViewModel(_settingsService, _cometService, new UpdateService());
         WeatherStrip = new WeatherStripViewModel(_weatherService);
 
         Planner.AnnotationService    = _annotationService;
@@ -109,6 +109,7 @@ public partial class MainWindowViewModel : ViewModelBase
         await Task.Run(() => Planner.Initialize());
         Dispatcher.UIThread.Post(UpdateMoonInfo);
         await RefreshWeatherAsync();
+        _ = Settings.CheckSilentlyAsync();
     }
 
     private Task RefreshWeatherAsync()

@@ -77,11 +77,18 @@
                              IsVisible="{Binding Planner.IsCalculating}"
                              VerticalAlignment="Center"/>
 
-                <!-- Settings toggle -->
-                <Button Grid.Column="10"
-                        Content="⚙ Settings"
-                        Command="{Binding ToggleSettingsCommand}"
-                        VerticalAlignment="Center"/>
+                <!-- Settings toggle (dot badge appears when update is available) -->
+                <Panel Grid.Column="10" VerticalAlignment="Center">
+                    <Button Content="⚙ Settings"
+                            Command="{Binding ToggleSettingsCommand}"/>
+                    <Border HorizontalAlignment="Right"
+                            VerticalAlignment="Top"
+                            Width="8" Height="8"
+                            CornerRadius="4"
+                            Background="{DynamicResource SystemAccentColor}"
+                            IsVisible="{Binding Settings.UpdateAvailable}"
+                            Margin="0,-3,-3,0"/>
+                </Panel>
             </Grid>
         </Border>
 
