@@ -27,12 +27,12 @@ jobs:
       - name: Publish
         run: dotnet publish AstroPlanner/AstroPlanner.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:Version=${{ steps.ver.outputs.version }}
 
-      - name: Install NSIS and build installer
+      - name: Install NSIS
+        run: choco install nsis --yes --no-progress
+
+      - name: Build installer
         shell: powershell
-        run: |
-          choco install nsis --yes --no-progress
-          $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH","User")
-          makensis /DAPP_VERSION=${{ steps.ver.outputs.version }} installer.nsi
+        run: '& "C:\Program Files (x86)\NSIS\makensis.exe" /DAPP_VERSION=${{ steps.ver.outputs.version }} installer.nsi'
 
       - name: Upload to release
         uses: softprops/action-gh-release@v2
