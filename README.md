@@ -7,6 +7,7 @@
   [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue)](#download)
   [![.NET](https://img.shields.io/badge/.NET-10-purple)](https://dotnet.microsoft.com)
   [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+  [![Catalog: CC BY-SA 4.0](https://img.shields.io/badge/catalog-CC%20BY--SA%204.0-orange)](NOTICES)
 </div>
 
 ---
@@ -86,7 +87,7 @@ Grab the latest build from the [Releases page](https://github.com/tankhardrive/A
 | **UI framework** | [Avalonia UI](https://avaloniaui.net) — native cross-platform desktop |
 | **Astronomy math** | [AASharp](https://github.com/jsauve/AASharp) — port of Jean Meeus' *Astronomical Algorithms* |
 | **Sky viewer** | [Aladin Lite v3](https://aladin.cds.unistra.fr/AladinLite/) embedded via WebView |
-| **Catalog** | [OpenNGC](https://github.com/mattiaverga/OpenNGC) (bundled) |
+| **Catalog** | [OpenNGC](https://github.com/mattiaverga/OpenNGC) by Mattia Verga (bundled, [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)) |
 | **Weather** | [Open-Meteo](https://open-meteo.com) + [7timer ASTRO](http://www.7timer.info) |
 | **Light pollution** | [lightpollutionmap.info](https://www.lightpollutionmap.info) |
 | **MVVM** | [CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet) |
@@ -118,3 +119,11 @@ Installer scripts are in the repo root (`installer.nsi` for Windows, `build-maco
 ## Credits
 
 Built by [tankhardrive](https://github.com/tankhardrive) with the help of [Claude Code](https://claude.ai/code) by Anthropic.
+
+### Third-party data
+
+The bundled NGC/IC catalog (`AstroPlanner/Assets/Data/NGC.csv`) is **OpenNGC**,
+created by [Mattia Verga](https://github.com/mattiaverga) and contributors, and
+licensed under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
+This data is not covered by the MIT license that applies to the AstroPlanner source code.
+See [NOTICES](NOTICES) for full attribution details.

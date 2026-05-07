@@ -1,0 +1,21 @@
+Third-Party Data Notices
+========================
+
+This file documents third-party data bundled with AstroPlanner that is NOT
+covered by the MIT license in the LICENSE file. The MIT license applies to
+the AstroPlanner source code only.
+
+---
+
+OpenNGC Catalog
+---------------
+File:    AstroPlanner/Assets/Data/NGC.csv
+Author:  Mattia Verga and OpenNGC contributors
+Source:  https://github.com/mattiaverga/OpenNGC
+License: Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+         https://creativecommons.org/licenses/by-sa/4.0/
+
+AstroPlanner bundles the OpenNGC catalog as an embedded resource to provide
+offline access to NGC, IC, Messier, and Caldwell object data. Any redistribution
+of this data — modified or unmodified — must preserve this attribution notice
+and be distributed under the same CC BY-SA 4.0 terms.
