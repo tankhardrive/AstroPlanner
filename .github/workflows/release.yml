@@ -27,6 +27,9 @@ jobs:
       - name: Publish
         run: dotnet publish AstroPlanner/AstroPlanner.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:Version=${{ steps.ver.outputs.version }}
 
+      - name: Install NSIS
+        run: choco install nsis --yes
+
       - name: Build installer
         run: makensis /DAPP_VERSION=${{ steps.ver.outputs.version }} installer.nsi
 
@@ -81,6 +84,7 @@ jobs:
       - name: Prepare AppDir
         run: |
           PUBLISH=AstroPlanner/bin/Release/net10.0/linux-x64/publish
+          mkdir -p AppDir/usr/bin
           cp "$PUBLISH/AstroPlanner"        AppDir/usr/bin/AstroPlanner
           cp "$PUBLISH/libHarfBuzzSharp.so" AppDir/usr/bin/
           cp "$PUBLISH/libSkiaSharp.so"     AppDir/usr/bin/
