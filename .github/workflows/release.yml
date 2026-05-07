@@ -1,0 +1,102 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Get version
+        id: ver
+        shell: bash
+        run: echo "version=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+
+      - name: Publish
+        run: dotnet publish AstroPlanner/AstroPlanner.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true
+
+      - name: Build installer
+        run: makensis /DAPP_VERSION=${{ steps.ver.outputs.version }} installer.nsi
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: AstroPlanner-${{ steps.ver.outputs.version }}-Setup.exe
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Get version
+        id: ver
+        run: echo "version=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+
+      - name: Install icon tools
+        run: brew install libicns imagemagick
+
+      - name: Publish
+        run: dotnet publish AstroPlanner/AstroPlanner.csproj -c Release -r osx-x64 --self-contained -p:PublishSingleFile=true
+
+      - name: Build app bundle
+        run: bash build-macos.sh ${{ steps.ver.outputs.version }}
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: AstroPlanner-${{ steps.ver.outputs.version }}-macos.tar.gz
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Get version
+        id: ver
+        run: echo "version=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+
+      - name: Publish
+        run: dotnet publish AstroPlanner/AstroPlanner.csproj -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true
+
+      - name: Prepare AppDir
+        run: |
+          PUBLISH=AstroPlanner/bin/Release/net10.0/linux-x64/publish
+          cp "$PUBLISH/AstroPlanner"        AppDir/usr/bin/AstroPlanner
+          cp "$PUBLISH/libHarfBuzzSharp.so" AppDir/usr/bin/
+          cp "$PUBLISH/libSkiaSharp.so"     AppDir/usr/bin/
+          chmod +x AppDir/usr/bin/AstroPlanner
+
+      - name: Download appimagetool
+        run: |
+          wget -q https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x appimagetool-x86_64.AppImage
+
+      - name: Build AppImage
+        run: |
+          ARCH=x86_64 ./appimagetool-x86_64.AppImage --appimage-extract-and-run \
+            AppDir AstroPlanner-${{ steps.ver.outputs.version }}-x86_64.AppImage
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: AstroPlanner-${{ steps.ver.outputs.version }}-x86_64.AppImage

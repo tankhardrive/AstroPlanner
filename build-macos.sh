@@ -2,7 +2,7 @@
 set -euo pipefail
 
 APP_NAME="AstroPlanner"
-APP_VERSION="1.0"
+APP_VERSION="${1:-1.0}"
 BUNDLE_ID="com.nhartmann.astroplanner"
 MIN_MACOS="12.0"
 

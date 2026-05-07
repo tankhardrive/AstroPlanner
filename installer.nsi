@@ -2,7 +2,9 @@
 
 ; ── App metadata ─────────────────────────────────────────────────────────────
 !define APP_NAME        "AstroPlanner"
+!ifndef APP_VERSION
 !define APP_VERSION     "1.0"
+!endif
 !define APP_PUBLISHER   "tankhardrive"
 !define APP_EXE         "AstroPlanner.exe"
 !define REG_KEY         "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}"
